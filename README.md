@@ -23,9 +23,9 @@
 
 ![Android Auto 播放界面](screenshot/auto.jpg)
 
-### 📱 手机端播放界面（使用 Booming Music 源码）
+<h3>📱 手机端播放界面（使用 Booming Music 源码）</h3>
+<img src="screenshot/mobile.jpg" width="360"/>
 
-![手机端播放界面](screenshot/mobile.jpg)
 
 
 ## 🚀 如何运行
