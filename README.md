@@ -26,6 +26,13 @@
 <h3>📱 手机端播放界面（使用 Booming Music 源码）</h3>
 <img src="screenshot/mobile.jpg" width="360"/>
 
+## 📥 APK 下载
+
+你可以直接下载安装本项目构建的 APK 文件：
+
+- 📦 [点击下载：糯米播放器 1.0.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器%201.0.0.apk)
+
+> 请确保已开启 Android Auto 的开发者模式并允许安装未知来源应用，具体步骤见下方运行指南。
 
 
 ## 🚀 如何运行
