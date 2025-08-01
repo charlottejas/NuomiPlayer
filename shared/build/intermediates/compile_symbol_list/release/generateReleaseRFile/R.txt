@@ -1,0 +1,1 @@
+int xml automotive_app_desc 0x0

@@ -1,0 +1,38 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:1:1-22:12
+INJECTED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:1:1-22:12
+	package
+		INJECTED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:1:11-69
+application
+ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:3:5-20:19
+	android:appCategory
+		ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:3:18-45
+meta-data#com.google.android.gms.car.application
+ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:5:9-7:59
+	android:resource
+		ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:7:13-56
+	android:name
+		ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:6:13-66
+service#com.example.myapplication.shared.MyMusicService
+ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:12:9-18:19
+	android:exported
+		ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:14:13-36
+	android:name
+		ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:13:13-75
+intent-filter#action:name:android.media.browse.MediaBrowserService
+ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:15:13-17:29
+action#android.media.browse.MediaBrowserService
+ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:16:17-83
+	android:name
+		ADDED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:16:25-80
+uses-sdk
+INJECTED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml
+INJECTED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml

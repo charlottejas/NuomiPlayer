@@ -1,0 +1,37 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.myapplication.shared" >
+4
+5    <uses-sdk android:minSdkVersion="28" />
+6
+7    <application android:appCategory="audio" >
+7-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:3:5-20:19
+7-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:3:18-45
+8        <meta-data
+8-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:5:9-7:59
+9            android:name="com.google.android.gms.car.application"
+9-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:6:13-66
+10            android:resource="@xml/automotive_app_desc" />
+10-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:7:13-56
+11
+12        <!--
+13         Main music service, provides media browsing and media playback services to
+14         consumers through MediaBrowserService and MediaSession. Consumers connect to it through
+15         MediaBrowser (for browsing) and MediaController (for playback control)
+16        -->
+17        <service
+17-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:12:9-18:19
+18            android:name="com.example.myapplication.shared.MyMusicService"
+18-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:13:13-75
+19            android:exported="true" >
+19-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:14:13-36
+20            <intent-filter>
+20-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:15:13-17:29
+21                <action android:name="android.media.browse.MediaBrowserService" />
+21-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:16:17-83
+21-->C:\Users\Charlottejas\AndroidStudioProjects\MyApplication\shared\src\main\AndroidManifest.xml:16:25-80
+22            </intent-filter>
+23        </service>
+24    </application>
+25
+26</manifest>

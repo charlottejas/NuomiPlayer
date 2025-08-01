@@ -1,0 +1,26 @@
+plugins {
+    id 'com.android.library'
+}
+android {
+    namespace 'com.example.myapplication.shared'
+    compileSdkVersion 34
+
+    defaultConfig {
+        minSdkVersion 28
+        targetSdkVersion 34
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+dependencies {
+    implementation libs.media
+    implementation "androidx.localbroadcastmanager:localbroadcastmanager:1.1.0"
+    implementation libs.remotecallback
+    annotationProcessor libs.remotecallback.processor
+    implementation "androidx.media:media:1.6.0"
+
+}

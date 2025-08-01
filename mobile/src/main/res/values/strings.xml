@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">糯米播放器</string>
+    <string name="playing_queue_label">Playing queue</string>
+    <string name="action_show_lyrics">Show lyrics</string>
+</resources>
