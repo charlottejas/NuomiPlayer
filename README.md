@@ -15,13 +15,16 @@
 - ⏩ 支持播放进度条及拖动控制
 - ⏯️ 支持播放 / 暂停 / 上一首 / 下一首 控制
 - 🖼️ 显示歌曲标题、艺术家、专辑图等媒体信息
-- 📝 歌词同步显示（TODO）
+- 📝 歌词同步显示
 
 ## 📸 界面预览
 
 ### 🚘 Android Auto 播放界面
 
 ![Android Auto 播放界面](screenshot/auto.jpg)
+### 📝 Android Auto 歌词界面
+
+![Android Auto 歌词界面](screenshot/lyrics.jpg)
 
 <h3>📱 手机端播放界面（使用 Booming Music 源码）</h3>
 <img src="screenshot/mobile.jpg" width="360"/>
@@ -30,7 +33,7 @@
 
 你可以直接下载安装本项目构建的 APK 文件：
 
-- 📦 [点击下载：糯米播放器 1.0.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器%201.0.0.apk)
+- 📦 [点击下载：糯米播放器 1.1.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.1.0.apk)
 
 > 请确保已开启 Android Auto 的开发者模式并允许安装未知来源应用，具体步骤见下方运行指南。
 
