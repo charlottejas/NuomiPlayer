@@ -21,11 +21,11 @@
 
 ### 🚘 Android Auto 播放界面
 
-![Android Auto 播放界面](screenshots/auto.jpg)
+![Android Auto 播放界面](screenshot/auto.jpg)
 
 ### 📱 手机端播放界面（使用 Booming Music 源码）
 
-![手机端播放界面](screenshots/mobile.jpg)
+![手机端播放界面](screenshot/mobile.jpg)
 
 
 ## 🚀 如何运行
