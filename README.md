@@ -39,7 +39,8 @@
 你可以直接下载安装本项目构建的 APK 文件：
 
 - 📦 [点击下载：糯米播放器 1.0.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器%201.0.0.apk) 稳定版本
-- 📦 [点击下载：糯米播放器 1.1.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.1.0.apk) 增加了实时歌词
+- 📦 [点击下载：糯米播放器 1.1.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.1.0.apk) 增加了实时歌词增加播放模式和默认开启歌词模式选项
+- 📦 [点击下载：糯米播放器 1.2.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.2.0.apk) 增加播放模式和默认开启歌词模式选项
 
 > 请确保已开启 Android Auto 的开发者模式并允许安装未知来源应用，具体步骤见下方运行指南。
 
