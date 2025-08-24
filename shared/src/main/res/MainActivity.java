@@ -65,8 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private long currentPositionMs = 0;                     // 当前播放位置（ms）
 
     // 支持两个来源的广播 action
-    private static final String ACTION_QQ  = "com.example.ACTION_QQ_CONTROLLER";
-    private static final String ACTION_NCM = "com.example.ACTION_NCM_CONTROLLER";
+    private static final String ACTION_QQ  = "com.nuomi.ACTION_QQ_CONTROLLER";
+    private static final String ACTION_NCM = "com.nuomi.ACTION_NCM_CONTROLLER";
 
     // 来源标识
     private static final String SRC_QQ  = "QQ";
@@ -177,14 +177,14 @@ public class MainActivity extends AppCompatActivity {
             prefs.edit().putBoolean("autoLyrics", isChecked).apply();
             if (isChecked) {
                 // 用户开启后立即激活歌词模式（由 MyMusicService 监听本地广播）
-                Intent intent = new Intent("com.example.ACTION_TOGGLE_LYRICS_MODE");
+                Intent intent = new Intent("com.nuomi.ACTION_TOGGLE_LYRICS_MODE");
                 LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(intent);
             }
         });
 
 // 启动时如果偏好是 true 且当前是 QQ 模式，按原逻辑主动开启
         if (autoLyrics && SRC_QQ.equals(activeSource)) {
-            Intent intent = new Intent("com.example.ACTION_TOGGLE_LYRICS_MODE");
+            Intent intent = new Intent("com.nuomi.ACTION_TOGGLE_LYRICS_MODE");
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         } else if (autoLyrics && SRC_NCM.equals(activeSource)) {
             // 安全措施 1（启动时也生效）：如果偏好里本来是开，但当前是网易云，强制关并落盘
@@ -223,8 +223,8 @@ public class MainActivity extends AppCompatActivity {
 
                 // 请求对应 Sniffer 立刻重发 Token（这样无需等播放/切歌）
                 LocalBroadcastManager.getInstance(this).sendBroadcast(
-                        new Intent(isChecked ? "com.example.REQUEST_NCM_TOKEN"
-                                : "com.example.REQUEST_QQ_TOKEN"));
+                        new Intent(isChecked ? "com.nuomi.REQUEST_NCM_TOKEN"
+                                : "com.nuomi.REQUEST_QQ_TOKEN"));
 
 
             });
@@ -256,8 +256,8 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_QQ);   // "com.example.ACTION_QQ_CONTROLLER"
-        filter.addAction(ACTION_NCM);  // "com.example.ACTION_NCM_CONTROLLER"
+        filter.addAction(ACTION_QQ);   // "com.nuomi.ACTION_QQ_CONTROLLER"
+        filter.addAction(ACTION_NCM);  // "com.nuomi.ACTION_NCM_CONTROLLER"
         LocalBroadcastManager.getInstance(this).registerReceiver(tokenReceiver, filter);
 
         // 6) 打开 App 按钮：根据当前来源启动 QQ 或 网易云

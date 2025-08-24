@@ -1,9 +1,12 @@
 package com.nuomi;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,6 +36,37 @@ public class PlaybackControlsFragment extends Fragment {
         super(R.layout.fragment_m3_player_playback_controls);
     }
 
+
+    // ===== 在类里新增：安全调用封装（任意位置，建议放成员方法区） =====
+    private void safeWithController(SafeControllerAction action) {
+        try {
+            MediaControllerCompat c = MediaControllerCompat.getMediaController(requireActivity());
+            if (c == null) {
+                Toast.makeText(requireContext(), "未发现可控制的播放器", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            // 探测存活
+            c.getTransportControls();
+            action.run(c);
+        } catch (RuntimeException e) {
+            String s = String.valueOf(e);
+            if (s.contains("DeadObjectException")) {
+                Log.e("PlaybackControlsFragment", "Remote session dead → request rebind", e);
+                requireContext().sendBroadcast(new Intent("com.nuomi.ACTION_REBIND_ACTIVE_SESSION"));
+                Toast.makeText(requireContext(), "播放器断开，正在重新连接…", Toast.LENGTH_SHORT).show();
+            } else {
+                Log.e("PlaybackControlsFragment", "Controller call failed", e);
+            }
+        }
+    }
+
+    // 自定义一个简单接口
+    private interface SafeControllerAction {
+        void run(MediaControllerCompat controller);
+    }
+
+
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         titleTv = view.findViewById(R.id.title);
@@ -52,32 +86,50 @@ public class PlaybackControlsFragment extends Fragment {
         playPauseButton = view.findViewById(R.id.playPauseButton);
         nextButton = view.findViewById(R.id.nextButton);
 
-        previousButton.setOnClickListener(v -> {
-            MediaControllerCompat controller = MediaControllerCompat.getMediaController(requireActivity());
-            if (controller != null) {
-                controller.getTransportControls().skipToPrevious();
-            }
-        });
-
-        playPauseButton.setOnClickListener(v -> {
-            MediaControllerCompat controller = MediaControllerCompat.getMediaController(requireActivity());
-            if (controller != null) {
-                PlaybackStateCompat state = controller.getPlaybackState();
-                if (state != null) {
-                    int playbackState = state.getState();
-                    if (playbackState == PlaybackStateCompat.STATE_PLAYING) {
-                        controller.getTransportControls().pause();
-                    } else {
-                        controller.getTransportControls().play();
+        previousButton.setOnClickListener(v ->
+                safeWithController(new SafeControllerAction() {
+                    @Override
+                    public void run(MediaControllerCompat c) {
+                        c.getTransportControls().skipToPrevious();
                     }
-                }
-            }
-        });
+                })
+        );
 
-        nextButton.setOnClickListener(v -> {
-            MediaControllerCompat controller = MediaControllerCompat.getMediaController(requireActivity());
-            if (controller != null) {
-                controller.getTransportControls().skipToNext();
+        playPauseButton.setOnClickListener(v ->
+                safeWithController(new SafeControllerAction() {
+                    @Override
+                    public void run(MediaControllerCompat c) {
+                        PlaybackStateCompat state = c.getPlaybackState();
+                        if (state != null && state.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                            c.getTransportControls().pause();
+                        } else {
+                            c.getTransportControls().play();
+                        }
+                    }
+                })
+        );
+
+        nextButton.setOnClickListener(v ->
+                safeWithController(new SafeControllerAction() {
+                    @Override
+                    public void run(MediaControllerCompat c) {
+                        c.getTransportControls().skipToNext();
+                    }
+                })
+        );
+
+        progressSlider.setListener(new MusicSlider.Listener() {
+            @Override public void onProgressChanged(MusicSlider slider, int progress, boolean fromUser) { }
+
+            @Override public void onStartTrackingTouch(MusicSlider slider) { }
+
+            @Override public void onStopTrackingTouch(MusicSlider slider) {
+                safeWithController(new SafeControllerAction() {
+                    @Override
+                    public void run(MediaControllerCompat c) {
+                        c.getTransportControls().seekTo(slider.getValue());
+                    }
+                });
             }
         });
 

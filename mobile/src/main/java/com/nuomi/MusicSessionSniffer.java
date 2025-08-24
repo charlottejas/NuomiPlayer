@@ -28,8 +28,8 @@ import android.content.Context;
 
 public class MusicSessionSniffer extends NotificationListenerService {
 
-    private static final String ACTION_CONTROLLER = "com.example.ACTION_CONTROLLER";
-    private static final String ACTION_REQ_TOKEN  = "com.example.REQUEST_TOKEN";
+    private static final String ACTION_CONTROLLER = "com.nuomi.ACTION_CONTROLLER";
+    private static final String ACTION_REQ_TOKEN  = "com.nuomi.REQUEST_TOKEN";
 
     private MediaController selectedCtrl;   // 当前选中包名对应的 controller
     private String selectedPkg;             // 当前选中的包名（从 SP 读取）

@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private Runnable tickerRunnable;
     private long currentPositionMs = 0;                     // 当前播放位置（ms）
 
-    private static final String ACTION_CONTROLLER = "com.example.ACTION_CONTROLLER";
+    private static final String ACTION_CONTROLLER = "com.nuomi.ACTION_CONTROLLER";
 
     // 来源标识
     private static final String SRC_QQ  = "QQ";
@@ -224,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
             prefs.edit().putBoolean("autoLyrics", isChecked).apply();
             if (isChecked) {
                 // 用户开启后立即激活歌词模式（由 MyMusicService 监听本地广播）
-                Intent intent = new Intent("com.example.ACTION_TOGGLE_LYRICS_MODE");
+                Intent intent = new Intent("com.nuomi.ACTION_TOGGLE_LYRICS_MODE");
                 LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(intent);
             }
         });

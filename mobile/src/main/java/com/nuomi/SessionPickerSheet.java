@@ -59,7 +59,7 @@ public class SessionPickerSheet extends BottomSheetDialogFragment {
                     .apply();
 
             LocalBroadcastManager.getInstance(requireContext())
-                    .sendBroadcast(new Intent("com.example.REQUEST_TOKEN"));
+                    .sendBroadcast(new Intent("com.nuomi.REQUEST_TOKEN"));
 
             LocalBroadcastManager.getInstance(requireContext())
                     .sendBroadcast(new Intent("com.nuomi.ACTION_SELECTION_CHANGED")
