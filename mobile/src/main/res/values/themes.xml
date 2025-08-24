@@ -10,7 +10,7 @@
 
         <item name="android:windowBackground">?colorSurface</item>
 
-        <item name="materialCardViewStyle">@style/Widget.Material3.CardView.Elevated</item>T
+        <item name="materialCardViewStyle">@style/Widget.Material3.CardView.Elevated</item>
         <item name="toolbarStyle">@style/ToolbarStyle</item>
         <item name="sliderStyle">@style/SliderStyle</item>
         <item name="windowActionModeOverlay">true</item>

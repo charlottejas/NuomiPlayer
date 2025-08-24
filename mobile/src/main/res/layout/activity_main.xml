@@ -48,12 +48,7 @@
             android:paddingBottom="4dp"
             android:text="自动开启歌词" />
 
-        <!-- 新增：网易云模式开关 -->
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_ncm_mode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="开启网易云模式"/>
+
 
     </com.google.android.material.appbar.MaterialToolbar>
 
@@ -90,10 +85,16 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <Button
-            android:id="@+id/btn_open_qqmusic"
+            android:id="@+id/btn_open_app"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="打开 QQ 音乐" />
+
+        <Button
+            android:id="@+id/btn_pick_session"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择播放器" />
 
 
 

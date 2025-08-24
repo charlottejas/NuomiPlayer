@@ -68,9 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private Runnable tickerRunnable;
     private long currentPositionMs = 0;                     // 当前播放位置（ms）
 
-    // 支持两个来源的广播 action
-    private static final String ACTION_QQ  = "com.example.ACTION_QQ_CONTROLLER";
-    private static final String ACTION_NCM = "com.example.ACTION_NCM_CONTROLLER";
+    private static final String ACTION_CONTROLLER = "com.example.ACTION_CONTROLLER";
 
     // 来源标识
     private static final String SRC_QQ  = "QQ";
@@ -80,8 +78,17 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean suppressLyricsToggle = false;
 
+    private static final String ACTION_SELECTION_CHANGED = "com.nuomi.ACTION_SELECTION_CHANGED";
 
 
+    private BroadcastReceiver selectionChangedRx = new BroadcastReceiver() {
+        @Override public void onReceive(Context c, Intent i) {
+            // 立刻刷新“打开 App”按钮文案
+            Button btnOpen = findViewById(R.id.btn_open_app);
+            refreshOpenButtonLabel(btnOpen);
+
+        }
+    };
 
     private @Nullable Intent buildLaunchIntent(String pkg) {
         PackageManager pm = getPackageManager();
@@ -123,8 +130,17 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void refreshOpenButtonLabel(Button btnOpen) {
-        btnOpen.setText(SRC_QQ.equals(activeSource) ? R.string.open_qq : R.string.open_ncm);
+        SharedPreferences sp = getSharedPreferences("session_pref", MODE_PRIVATE);
+        String label = sp.getString("last_label", null);
+        String pkg   = sp.getString("last_pkg", null);
+
+        if (label != null && pkg != null) {
+            btnOpen.setText("打开 " + label);
+        } else {
+            btnOpen.setText("打开 App");
+        }
     }
+
 
     // ========================= 生命周期入口 =========================
     @Override
@@ -136,10 +152,29 @@ public class MainActivity extends AppCompatActivity {
             promptForNlPermission();
         }
 
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(selectionChangedRx, new IntentFilter(ACTION_SELECTION_CHANGED));
+
+
         // 设置布局
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        Button btnOpen = findViewById(R.id.btn_open_qqmusic);
+
+        Button pickBtn = findViewById(R.id.btn_pick_session);
+        pickBtn.setOnClickListener(v -> {
+            // 先检查是否已授予通知监听权限
+            if (!com.nuomi.NotifAccessHelper.isEnabled(this)) {
+                Toast.makeText(this, "请先开启“通知使用权”，再返回此页", Toast.LENGTH_LONG).show();
+                com.nuomi.NotifAccessHelper.openSettings(this);
+                return;
+            }
+            // 打开底部弹窗
+            new com.nuomi.SessionPickerSheet()
+                    .show(getSupportFragmentManager(), "session_picker");
+        });
+
+
+        Button btnOpen = findViewById(R.id.btn_open_app);
 
         // 沉浸式状态栏处理
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
@@ -156,28 +191,36 @@ public class MainActivity extends AppCompatActivity {
         activeSource = SRC_NCM.equals(savedSrc) ? SRC_NCM : SRC_QQ;
 
         // 4) 初始化两个开关
-        // 4.1 歌词模式开关
-        // 4.1 歌词模式开关（加了网易云模式的两道安全措施）
+        // 4.1 歌词模式开关（仅 QQ 音乐允许，其他 App 一律禁用）
         SwitchCompat switchLyrics = findViewById(R.id.switch_lyrics_mode);
 
-// 如果当前是网易云模式，则强制把歌词开关置为关闭
-        boolean initialLyrics = autoLyrics && !SRC_NCM.equals(activeSource);
-        switchLyrics.setChecked(initialLyrics);
+        // 读取用户在 SessionPicker 里选择的 App
+        SharedPreferences selSp = getSharedPreferences("session_pref", MODE_PRIVATE);
+        String chosenPkg = selSp.getString("last_pkg", null);
+        boolean isQQSelected = "com.tencent.qqmusic".equals(chosenPkg);
+
+        // 只有当选择的是 QQ 且偏好为 true 才默认勾选
+        switchLyrics.setChecked(autoLyrics && isQQSelected);
 
         switchLyrics.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (suppressLyricsToggle) return;
 
-            // 安全措施 2：网易云模式下，拦截用户尝试开启，并提示
-            if (SRC_NCM.equals(activeSource) && isChecked) {
+            // 实时确认当前所选 App（避免用户刚切换了选择）
+            SharedPreferences curSel = getSharedPreferences("session_pref", MODE_PRIVATE);
+            String currentPkg = curSel.getString("last_pkg", null);
+            boolean isQQ = "com.tencent.qqmusic".equals(currentPkg);
+
+            // 非 QQ 音乐：禁止开启歌词模式并回拨
+            if (!isQQ && isChecked) {
                 suppressLyricsToggle = true;
-                switchLyrics.setChecked(false);                 // 立刻回拨
+                switchLyrics.setChecked(false);   // 立刻回拨
                 suppressLyricsToggle = false;
-                Toast.makeText(MainActivity.this, "网易云音乐暂不支持歌词模式", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "当前选择的 App 不支持歌词模式（仅 QQ 音乐）", Toast.LENGTH_SHORT).show();
                 prefs.edit().putBoolean("autoLyrics", false).apply();
                 return;
             }
 
-            // 正常路径（仅 QQ 模式允许修改）
+            // QQ 音乐：正常落盘与通知
             prefs.edit().putBoolean("autoLyrics", isChecked).apply();
             if (isChecked) {
                 // 用户开启后立即激活歌词模式（由 MyMusicService 监听本地广播）
@@ -186,62 +229,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-// 启动时如果偏好是 true 且当前是 QQ 模式，按原逻辑主动开启
-        if (autoLyrics && SRC_QQ.equals(activeSource)) {
-            Intent intent = new Intent("com.example.ACTION_TOGGLE_LYRICS_MODE");
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        } else if (autoLyrics && SRC_NCM.equals(activeSource)) {
-            // 安全措施 1（启动时也生效）：如果偏好里本来是开，但当前是网易云，强制关并落盘
-            prefs.edit().putBoolean("autoLyrics", false).apply();
-        }
 
 
-        // 4.2 新增：网易云模式开关
-        SwitchCompat switchNcm = findViewById(R.id.switch_ncm_mode);
-        if (switchNcm != null) {
-            switchNcm.setChecked(SRC_NCM.equals(activeSource));
-            switchNcm.setOnCheckedChangeListener((btn, isChecked) -> {
-                activeSource = isChecked ? SRC_NCM : SRC_QQ;
-                prefs.edit().putString("activeSource", activeSource).apply();
 
-                refreshOpenButtonLabel(btnOpen);
-
-                if (qqCtrl != null) {
-                    try { qqCtrl.unregisterCallback(cb); } catch (Exception ignore) {}
-                    qqCtrl = null;
-                }
-
-                Toast.makeText(this,
-                        isChecked ? "已切换到网易云模式" : "已切换到QQ音乐模式",
-                        Toast.LENGTH_SHORT).show();
-
-                // ✅ 切到网易云：强制把歌词开关关掉，并把偏好改为 false
-                if (isChecked) {
-                    if (switchLyrics.isChecked()) {
-                        suppressLyricsToggle = true;
-                        switchLyrics.setChecked(false);
-                        suppressLyricsToggle = false;
-                    }
-                    prefs.edit().putBoolean("autoLyrics", false).apply();
-                }
-
-                // 请求对应 Sniffer 立刻重发 Token（这样无需等播放/切歌）
-                LocalBroadcastManager.getInstance(this).sendBroadcast(
-                        new Intent(isChecked ? "com.example.REQUEST_NCM_TOKEN"
-                                : "com.example.REQUEST_QQ_TOKEN"));
-
-
-            });
-        }
-
-
-        // 5) 注册广播接收器：同时监听 QQ / 网易云 Token，仅采纳当前来源
+        // 5) 注册广播接收器：仅采纳“当前选中的 App”
         tokenReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context c, Intent i) {
-                String action = i.getAction();
-                if (SRC_QQ.equals(activeSource) && !ACTION_QQ.equals(action)) return;
-                if (SRC_NCM.equals(activeSource) && !ACTION_NCM.equals(action)) return;
+                // 只处理通用 Action
+                if (!ACTION_CONTROLLER.equals(i.getAction())) return;
+
+                // 广播里携带的来源包名（由 Sniffer 填入）
+                String sourcePkg = i.getStringExtra("pkg");
+                if (sourcePkg == null) return;
+
+                // 读取当前用户选中的包名
+                SharedPreferences sp = getSharedPreferences("session_pref", MODE_PRIVATE);
+                String chosenPkg = sp.getString("last_pkg", null);
+                if (chosenPkg == null || !chosenPkg.equals(sourcePkg)) {
+                    // 不是当前选中的来源，忽略
+                    return;
+                }
 
                 MediaSessionCompat.Token tk = i.getParcelableExtra("binder");
                 if (tk == null) return;
@@ -255,36 +263,38 @@ public class MainActivity extends AppCompatActivity {
                     MediaMetadataCompat meta = qqCtrl.getMetadata();
                     if (meta != null) cb.onMetadataChanged(meta);
                 } catch (Exception e) {
-                    Log.e("QqSniffer", "set controller failed", e);
+                    Log.e("QqSniffer", "设置控制器失败", e);
                 }
             }
         };
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_QQ);   // "com.example.ACTION_QQ_CONTROLLER"
-        filter.addAction(ACTION_NCM);  // "com.example.ACTION_NCM_CONTROLLER"
+
+        IntentFilter filter = new IntentFilter(ACTION_CONTROLLER);
         LocalBroadcastManager.getInstance(this).registerReceiver(tokenReceiver, filter);
 
-        // 6) 打开 App 按钮：根据当前来源启动 QQ 或 网易云
+
+        // 6) 打开 App 按钮
 
         refreshOpenButtonLabel(btnOpen);
         btnOpen.setOnClickListener(v -> {
-            if (SRC_QQ.equals(activeSource)) {
-                // 先试深链（你原逻辑），失败再兜底
-                try {
-                    Intent deep = new Intent(Intent.ACTION_VIEW, Uri.parse("qqmusic://"));
-                    deep.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(deep);
-                } catch (ActivityNotFoundException e) {
-                    Intent launch = buildLaunchIntent("com.tencent.qqmusic");
-                    if (launch != null) startActivity(launch);
-                    else openMarketOrToast("com.tencent.qqmusic", "QQ 音乐");
-                }
+            SharedPreferences sp = getSharedPreferences("session_pref", MODE_PRIVATE);
+            String pkg = sp.getString("last_pkg", null);
+            String label = sp.getString("last_label", "所选应用");
+
+            if (pkg == null) {
+                Toast.makeText(this, "请先选择一个 App", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 尝试启动
+            Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(launch);
             } else {
-                Intent launch = buildLaunchIntent("com.netease.cloudmusic");
-                if (launch != null) startActivity(launch);
-                else openMarketOrToast("com.netease.cloudmusic", "网易云音乐");
+                Toast.makeText(this, "未找到 " + label, Toast.LENGTH_SHORT).show();
             }
         });
+
 
 
 
@@ -298,6 +308,10 @@ public class MainActivity extends AppCompatActivity {
         if (qqCtrl != null) qqCtrl.unregisterCallback(cb);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(tokenReceiver);
         progressHandler.removeCallbacksAndMessages(null);  // 停止进度更新
+
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(selectionChangedRx);
+
         super.onDestroy();
     }
 
@@ -403,6 +417,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshOpenButtonLabel(findViewById(R.id.btn_open_app));
+    }
+
 
 
     // ========================= 播放进度模拟器 =========================

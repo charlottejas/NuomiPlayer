@@ -16,135 +16,144 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import java.util.List;
+import android.content.SharedPreferences;
 
-@SuppressLint("OverrideAbstract")
+
+import androidx.annotation.Nullable;
+
+
+import android.content.Context;
+
+
+
 public class MusicSessionSniffer extends NotificationListenerService {
 
-    private static final String QQ_PKG  = "com.tencent.qqmusic";
-    private static final String NCM_PKG = "com.netease.cloudmusic";
+    private static final String ACTION_CONTROLLER = "com.example.ACTION_CONTROLLER";
+    private static final String ACTION_REQ_TOKEN  = "com.example.REQUEST_TOKEN";
 
-    // 广播：给 App
-    private static final String ACTION_QQ_TOKEN  = "com.example.ACTION_QQ_CONTROLLER";
-    private static final String ACTION_NCM_TOKEN = "com.example.ACTION_NCM_CONTROLLER";
-    // 广播：App 请求我立刻重发 Token
-    private static final String REQ_QQ_TOKEN  = "com.example.REQUEST_QQ_TOKEN";
-    private static final String REQ_NCM_TOKEN = "com.example.REQUEST_NCM_TOKEN";
-
-    private MediaController qqCtrl, ncmCtrl;
+    private MediaController selectedCtrl;   // 当前选中包名对应的 controller
+    private String selectedPkg;             // 当前选中的包名（从 SP 读取）
 
     @Override public void onCreate() {
         super.onCreate();
-        Log.i("Sniffer", "🚀 MusicSessionSniffer STARTED (onCreate)");
+        Log.i("Sniffer", "🚀 MusicSessionSniffer 启动");
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
-        lbm.registerReceiver(reqTokenRx, new IntentFilter(REQ_QQ_TOKEN));
-        lbm.registerReceiver(reqTokenRx, new IntentFilter(REQ_NCM_TOKEN));
+        lbm.registerReceiver(reqTokenRx, new IntentFilter(ACTION_REQ_TOKEN));
     }
 
     @Override public void onDestroy() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(reqTokenRx);
+        Log.i("Sniffer", "🛑 MusicSessionSniffer 已销毁");
         super.onDestroy();
     }
 
     @Override public void onListenerConnected() {
-        Log.i("Sniffer", "🔌 onListenerConnected");
-        refreshControllers();
-        sendTokenIfAny(QQ_PKG);
-        sendTokenIfAny(NCM_PKG);
-    }
-
-    @Override public void onListenerDisconnected() {
-        Log.w("Sniffer", "🔌 onListenerDisconnected");
-        super.onListenerDisconnected();
+        Log.i("Sniffer", "🔌 已连接到通知监听服务");
+        refreshSelectedController();
+        sendTokenIfAny();
     }
 
     @Override public void onNotificationPosted(StatusBarNotification sbn) {
         String pkg = sbn.getPackageName();
-        if (QQ_PKG.equals(pkg) || NCM_PKG.equals(pkg)) {
-            Log.i("Sniffer", "🔔 notif from " + pkg);
-            refreshControllers();
-            sendTokenIfAny(pkg);
+        String want = readChosenPkg();
+        if (want == null) return;
+        if (want.equals(pkg)) {
+            Log.i("Sniffer", "🔔 收到来自已选中应用的通知: " + pkg);
+            refreshSelectedController();
+            sendTokenIfAny();
         }
     }
 
-    // App 请求立刻重发 Token
     private final BroadcastReceiver reqTokenRx = new BroadcastReceiver() {
-        @Override public void onReceive(android.content.Context c, Intent i) {
-            String a = i.getAction();
-            Log.i("Sniffer", "📨 request token: " + a);
-            refreshControllers();
-            if (REQ_QQ_TOKEN.equals(a))  sendTokenIfAny(QQ_PKG);
-            if (REQ_NCM_TOKEN.equals(a)) sendTokenIfAny(NCM_PKG);
+        @Override public void onReceive(Context c, Intent i) {
+            Log.i("Sniffer", "📨 收到立即重发 Token 请求");
+            refreshSelectedController();
+            sendTokenIfAny();
         }
     };
 
-    private void refreshControllers() {
+    @Nullable
+    private String readChosenPkg() {
+        SharedPreferences sp = getSharedPreferences("session_pref", MODE_PRIVATE);
+        return sp.getString("last_pkg", null);
+    }
+
+    private void refreshSelectedController() {
+        selectedPkg = readChosenPkg();
+        if (selectedPkg == null) {
+            selectedCtrl = null;
+            Log.w("Sniffer", "⚠️ 当前没有用户选中的应用");
+            return;
+        }
+
         MediaSessionManager sm = (MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
-        if (sm == null) { Log.w("Sniffer", "MediaSessionManager null"); return; }
+        if (sm == null) { Log.w("Sniffer", "❌ 无法获取 MediaSessionManager"); return; }
 
         ComponentName me = new ComponentName(this, MusicSessionSniffer.class);
-        List<MediaController> list = null;
+        java.util.List<MediaController> list = null;
         try { list = sm.getActiveSessions(me); } catch (SecurityException ignore) {}
         if (list == null || list.isEmpty()) {
             try { list = sm.getActiveSessions(null); } catch (Throwable ignore) {}
         }
-        Log.i("Sniffer", "active sessions = " + (list == null ? 0 : list.size()));
-        if (list == null) return;
+        Log.i("Sniffer", "📊 活跃会话数量 = " + (list == null ? 0 : list.size()));
+        if (list == null) { selectedCtrl = null; return; }
 
+        MediaController found = null;
         for (MediaController c : list) {
-            String pkg = c.getPackageName();
-            if (QQ_PKG.equals(pkg)) {
-                if (qqCtrl == null || !qqCtrl.getSessionToken().equals(c.getSessionToken())) {
-                    attachFor(pkg, c);
-                }
-            } else if (NCM_PKG.equals(pkg)) {
-                if (ncmCtrl == null || !ncmCtrl.getSessionToken().equals(c.getSessionToken())) {
-                    attachFor(pkg, c);
-                }
+            if (selectedPkg.equals(c.getPackageName())) {
+                found = c;
+                break;
             }
+        }
+
+        if (found == null) {
+            Log.w("Sniffer", "⚠️ 当前选中的应用没有活跃会话: " + selectedPkg);
+            selectedCtrl = null;
+            return;
+        }
+
+        if (selectedCtrl == null ||
+                !selectedCtrl.getSessionToken().equals(found.getSessionToken())) {
+            selectedCtrl = found;
+            Log.i("Sniffer", "🎶 绑定到新会话: " + selectedPkg);
+            dumpCapabilities(selectedCtrl);
+
+            selectedCtrl.registerCallback(new MediaController.Callback() {
+                @Override public void onMetadataChanged(MediaMetadata meta)  { dumpMeta(selectedPkg, meta); }
+                @Override public void onPlaybackStateChanged(PlaybackState s){ dumpState(selectedPkg, s);   }
+            });
+
+            dumpMeta(selectedPkg, selectedCtrl.getMetadata());
+            dumpState(selectedPkg, selectedCtrl.getPlaybackState());
         }
     }
 
-    private void attachFor(String pkg, MediaController c) {
-        if (QQ_PKG.equals(pkg)) qqCtrl = c; else ncmCtrl = c;
-        Log.i("Sniffer", "🎶 attach to " + pkg + " session");
-        dumpCapabilities(c);
-        sendTokenIfAny(pkg);
-
-        c.registerCallback(new MediaController.Callback() {
-            @Override public void onMetadataChanged(MediaMetadata meta)  { dumpMeta(pkg, meta); }
-            @Override public void onPlaybackStateChanged(PlaybackState s){ dumpState(pkg, s);   }
-        });
-        dumpMeta(pkg, c.getMetadata());
-        dumpState(pkg, c.getPlaybackState());
-    }
-
-    private void sendTokenIfAny(String pkg) {
-        MediaController ctrl = QQ_PKG.equals(pkg) ? qqCtrl : ncmCtrl;
-        if (ctrl == null) return;
-        MediaSessionCompat.Token compat = MediaSessionCompat.Token.fromToken(ctrl.getSessionToken());
-        Intent i = new Intent(QQ_PKG.equals(pkg) ? ACTION_QQ_TOKEN : ACTION_NCM_TOKEN);
+    private void sendTokenIfAny() {
+        if (selectedCtrl == null || selectedPkg == null) return;
+        MediaSessionCompat.Token compat = MediaSessionCompat.Token.fromToken(selectedCtrl.getSessionToken());
+        Intent i = new Intent(ACTION_CONTROLLER);
+        i.putExtra("pkg", selectedPkg);
         i.putExtra("binder", compat);
         LocalBroadcastManager.getInstance(this).sendBroadcast(i);
-        Log.i("Sniffer", "📡 sent token: " + pkg);
+        Log.i("Sniffer", "📡 已发送 Token 给应用: " + selectedPkg);
     }
 
-    /* --- 调试打印，可保留 --- */
+    /* --- 调试打印（中文版本） --- */
     private void dumpMeta(String pkg, MediaMetadata meta) {
         if (meta == null) return;
-        Log.i("Sniffer", pkg + " Meta → title=" + meta.getString(MediaMetadata.METADATA_KEY_TITLE)
-                + " | artist=" + meta.getString(MediaMetadata.METADATA_KEY_ARTIST)
-                + " | dur=" + meta.getLong(MediaMetadata.METADATA_KEY_DURATION));
+        Log.i("Sniffer", pkg + " 元数据 → 歌曲: " + meta.getString(MediaMetadata.METADATA_KEY_TITLE)
+                + " | 歌手: " + meta.getString(MediaMetadata.METADATA_KEY_ARTIST)
+                + " | 时长: " + meta.getLong(MediaMetadata.METADATA_KEY_DURATION) + "ms");
     }
     private void dumpState(String pkg, PlaybackState st) {
         if (st == null) return;
-        String s = st.getState() == PlaybackState.STATE_PLAYING ? "PLAYING"
-                : st.getState() == PlaybackState.STATE_PAUSED ? "PAUSED" : String.valueOf(st.getState());
-        Log.i("Sniffer", pkg + " State → " + s + " | pos=" + st.getPosition());
+        String s = st.getState() == PlaybackState.STATE_PLAYING ? "播放中"
+                : st.getState() == PlaybackState.STATE_PAUSED ? "已暂停" : String.valueOf(st.getState());
+        Log.i("Sniffer", pkg + " 播放状态 → " + s + " | 位置=" + st.getPosition() + "ms");
     }
     private void dumpCapabilities(MediaController ctrl) {
         PlaybackState st = ctrl.getPlaybackState();
         long a = st != null ? st.getActions() : 0;
-        Log.i("Sniffer", "actions=" + a + " pkg=" + ctrl.getPackageName());
+        Log.i("Sniffer", "可用操作=" + a + " | 包名=" + ctrl.getPackageName());
     }
 }

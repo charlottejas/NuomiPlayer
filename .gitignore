@@ -1,15 +1,62 @@
-*.iml
-.gradle
-/local.properties
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Gradle ===
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+.gradle/
+gradlew
+gradlew.bat
+
+# === Local configuration ===
+local.properties
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+
+# === Android Studio ===
+*.iml
+.idea/
+.cxx/
+.externalNativeBuild/
+captures/
+output.json
+
+# === Keystore files  ===
+*.jks
+*.keystore
+*.pem
+*.p12
+
+# === Logs ===
+*.log
+
+# === Others  ===
+/app/release/
+/app/debug/
+/app/*.apk
+/app/*.ap_ 
+
+# === IntelliJ IDEA ===
+.idea/*
+*.ipr
+*.iws
+
+# === JetBrains ===
+out/
+
+# === Google Services  ===
+google-services.json
+app/google-services.json
+
+# === NDK / CMake ===
+obj/
+
+# === Misc ===
+*.hprof

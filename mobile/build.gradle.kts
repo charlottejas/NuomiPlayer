@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.nuomi"
-        minSdk = 28
+        minSdk = 33
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -51,4 +51,6 @@ dependencies {
     implementation("androidx.media3:media3-session:1.4.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("androidx.media:media:1.6.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+
 }
