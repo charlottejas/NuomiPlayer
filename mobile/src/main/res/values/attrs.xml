@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="roundSelector" format="reference"/>
+    <attr name="rectSelector" format="reference"/>
+    <attr name="toolbarPopupTheme" format="reference"/>
+    <attr name="defaultFooterColor" format="color"/>
+
+    <declare-styleable name="InfoView">
+        <attr name="infoTitle" format="string"/>
+        <attr name="infoTitleColor" format="color"/>
+        <attr name="infoText" format="string"/>
+        <attr name="infoTextColor" format="color"/>
+        <attr name="infoStyle" format="enum">
+            <enum name="horizontal" value="0"/>
+            <enum name="vertical" value="1"/>
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="PermissionView">
+        <attr name="permissionTitle" format="string"/>
+        <attr name="permissionDescription" format="string"/>
+        <attr name="buttonIcon" format="reference"/>
+        <attr name="buttonText" format="string"/>
+        <attr name="number" format="integer"/>
+        <attr name="granted" format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="BaselineGridTextView">
+        <attr name="lineHeightMultiplierHint" format="float" />
+        <attr name="lineHeightHint" format="dimension"/>
+        <attr name="maxLinesByHeight" format="boolean" />
+        <attr name="android:textAppearance" />
+        <attr name="android:fontFamily" />
+    </declare-styleable>
+
+    <declare-styleable name="BoomingShapeableImageView">
+        <attr name="boomingCornerSize" format="dimension" />
+        <attr name="circleShape" format="boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="MusicSlider">
+        <attr name="squigglyStyle" format="boolean"/>
+        <attr name="android:progress" format="integer"/>
+        <attr name="android:max" format="integer"/>
+        <attr name="android:min" format="integer"/>
+    </declare-styleable>
+</resources>

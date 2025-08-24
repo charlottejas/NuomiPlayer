@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">糯米播放器</string>
+    <string name="playing_queue_label">Playing queue</string>
+    <string name="action_show_lyrics">Show lyrics</string>
+    <string name="open_qq">打开QQ音乐</string>
+    <string name="open_ncm">打开网易云音乐</string>
+
+</resources>

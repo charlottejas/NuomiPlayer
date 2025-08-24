@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.MyApplication" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+        <item name="toolbarPopupTheme">@style/ThemeOverlay.Material3.Dark</item>
+
+        <item name="android:actionOverflowButtonStyle">@style/Widget.ActionButton.Overflow</item>
+
+        <item name="android:windowBackground">?colorSurface</item>
+
+        <item name="materialCardViewStyle">@style/Widget.Material3.CardView.Elevated</item>T
+        <item name="toolbarStyle">@style/ToolbarStyle</item>
+        <item name="sliderStyle">@style/SliderStyle</item>
+        <item name="windowActionModeOverlay">true</item>
+
+    </style>
+
+    <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />
+</resources>

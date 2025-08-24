@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.糯米播放器" parent="android:Theme.Material.Light.DarkActionBar" />
+</resources>

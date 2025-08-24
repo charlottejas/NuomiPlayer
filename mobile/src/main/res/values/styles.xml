@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+
+
+    <style name="ToolbarStyle" parent="Widget.Material3.Toolbar">
+        <item name="android:transitionName">toolbar</item>
+        <item name="contentInsetStart">0dp</item>
+        <item name="contentInsetStartWithNavigation">0dp</item>
+        <item name="popupTheme">?toolbarPopupTheme</item>
+        <item name="titleMarginStart">16dp</item>
+    </style>
+
+    <style name="SliderStyle" parent="Widget.Material3.Slider">
+        <item name="thumbRadius">6dp</item>
+        <item name="haloRadius">18dp</item>
+
+    </style>
+
+    <style name="Widget.ActionButton.Overflow" parent="Widget.AppCompat.ActionButton.Overflow">
+        <item name="android:contentDescription" tools:ignore="PrivateResource">
+            @string/abc_action_menu_overflow_description
+        </item>
+    </style>
+
+    <!-- MORE WIDGET STYLES -->
+
+    <style name="HomeActionButton" parent="Widget.Material3.Button.Icon">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:lines">2</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="android:textColor">?android:textColorPrimary</item>
+        <item name="backgroundTint">?colorSurfaceContainerLowest</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="iconPadding">16dp</item>
+        <item name="iconGravity">start</item>
+        <item name="iconTint">?colorSecondary</item>
+        <item name="android:gravity">start|center_vertical</item>
+    </style>
+
+    <style name="PlayerIconButton" parent="Widget.Material3.Button.IconButton">
+        <item name="iconGravity">textStart</item>
+        <item name="iconTint">?colorControlNormal</item>
+        <item name="rippleColor">?colorControlHighlight</item>
+    </style>
+
+    <style name="PlayerIconButton.Medium">
+        <item name="iconSize">32dp</item>
+    </style>
+
+    <style name="PlayerIconButton.Large">
+        <item name="iconSize">64dp</item>
+    </style>
+
+    <style name="SearchChipStyle" parent="Widget.Material3.Chip.Filter">
+        <item name="android:checked">false</item>
+        <item name="android:textSize">16sp</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="chipEndPadding">10dp</item>
+        <item name="chipMinHeight">40dp</item>
+        <item name="chipStartPadding">10dp</item>
+    </style>
+
+    <style name="MenuButtonStyle" parent="Widget.Material3.Button.IconButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:focusableInTouchMode">false</item>
+        <item name="android:focusable">false</item>
+        <item name="iconTint">?colorControlNormal</item>
+    </style>
+
+    <style name="BottomSheetStyle" parent="Widget.Material3.BottomSheet">
+        <item name="paddingBottomSystemWindowInsets">false</item>
+        <item name="android:maxWidth">@null</item>
+        <item name="shapeAppearance">?attr/shapeAppearanceCornerMedium</item>
+    </style>
+
+    <!-- TEXT APPEARANCE -->
+    <style name="TextAppearance.Booming.Notification.Title"
+        parent="@android:style/TextAppearance.Material.Notification.Title"/>
+
+    <style name="TextAppearance.Booming.Notification.Line2"
+        parent="@android:style/TextAppearance.Material.Notification.Line2"/>
+
+    <style name="CircularShapeAppearance" parent="">
+        <item name="cornerSize">50%</item>
+        <item name="cornerFamily">rounded</item>
+    </style>
+
+    <style name="Base.SquigglySlider" parent="Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:progressTint">?colorPrimary</item>
+        <item name="android:thumbTint">?colorPrimary</item>
+        <item name="android:progressBackgroundTint">?android:attr/textColorTertiary</item>
+        <item name="android:clickable">true</item>
+        <item name="android:splitTrack">false</item>
+        <item name="android:thumb">@drawable/squiggly_thumb</item>
+    </style>
+
+    <style name="SquigglySlider" parent="Base.SquigglySlider">
+        <item name="android:progressDrawable">@drawable/media_squiggly_progress</item>
+    </style>
+
+
+
+
+
+</resources>
