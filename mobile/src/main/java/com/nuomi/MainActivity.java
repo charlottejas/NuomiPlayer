@@ -1,5 +1,6 @@
 package com.nuomi;
 
+import android.Manifest;
 import android.os.Bundle;
 
 import android.content.ActivityNotFoundException;
@@ -85,10 +86,20 @@ public class MainActivity extends AppCompatActivity {
 
     private BroadcastReceiver selectionChangedRx = new BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent i) {
-            // 立刻刷新“打开 App”按钮文案
             Button btnOpen = findViewById(R.id.btn_open_app);
             refreshOpenButtonLabel(btnOpen);
 
+            // ↓↓↓ 新增：会话变更时同步歌词开关
+            SwitchCompat sw = findViewById(R.id.switch_lyrics_mode);
+            boolean autoLyrics = getSharedPreferences("settings", MODE_PRIVATE)
+                    .getBoolean("autoLyrics", false);
+            String pkg = getSharedPreferences("session_pref", MODE_PRIVATE)
+                    .getString("last_pkg", null);
+            boolean isQQ = "com.tencent.qqmusic".equals(pkg);
+
+            suppressLyricsToggle = true;
+            sw.setChecked(autoLyrics && isQQ);  // 非QQ时自动回拨为关；回到QQ且autoLyrics=true时自动打开
+            suppressLyricsToggle = false;
         }
     };
 
@@ -154,6 +165,13 @@ public class MainActivity extends AppCompatActivity {
             promptForNlPermission();
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                promptForPostNotificationsPermission();
+            }
+        }
+
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(selectionChangedRx, new IntentFilter(ACTION_SELECTION_CHANGED));
 
@@ -161,6 +179,37 @@ public class MainActivity extends AppCompatActivity {
         // 设置布局
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+
+        // ✅ 在这里插入首次使用说明弹窗
+        SharedPreferences sp1 = getSharedPreferences("settings", MODE_PRIVATE);
+        boolean shown = sp1.getBoolean("guideShown", false);
+        if (!shown) {
+            new AlertDialog.Builder(this)
+                    .setTitle("使用说明")
+                    .setMessage("📱 初次使用：\n\n"
+                            + "1. 在接下来的页面授权通知权限，需要从通知获得歌曲信息\n\n"
+                            + "2. 打开你要使用的音乐 App，让它在后台播放，然后点击“选择播放器”按钮\n\n"
+                            + "3. 点击“刷新”按钮，正在播放的 App 会显示名称和图标，点击选中\n"
+                            + "   （只有第一次录入新 App 时需要，以后切换时可直接点击切换）\n\n"
+                            + "4. 这时你能看到手机端播放器展示当前歌曲信息，表示已成功 🎶\n\n"
+                            + "🚗 Android Auto：\n\n"
+                            + "1. 在手机 Android Auto 中开启开发者模式，并允许未知来源应用\n\n"
+                            + "2. 例如使用 QQ 音乐：手机连接车机 Android Auto → 确保糯米播放器在后台运行 → 打开 QQ 音乐播放\n\n"
+                            + "3. 车机端糯米播放器会自动显示歌曲。如果显示“没有任何内容”，请在手机端点击暂停再播放等待1~2 秒")
+                    .setPositiveButton("我知道了", (d, w) -> {
+                        sp1.edit().putBoolean("guideShown", true).apply();
+                        d.dismiss();
+                    })
+                    .setCancelable(false)
+
+                    .setPositiveButton("我知道了", (d, w) -> {
+                        sp1.edit().putBoolean("guideShown", true).apply(); // 标记已展示
+                        d.dismiss();
+                    })
+                    .setCancelable(false)
+                    .show();
+        }
 
         Button pickBtn = findViewById(R.id.btn_pick_session);
         pickBtn.setOnClickListener(v -> {
@@ -335,7 +384,7 @@ public class MainActivity extends AppCompatActivity {
     private void promptForNlPermission() {
         new AlertDialog.Builder(this)
                 .setTitle("启用通知读取权限")
-                .setMessage("请在接下来的页面勾选本应用，否则无法读取音乐曲目信息。")
+                .setMessage("请在接下来的页面中勾选本应用，否则将无法获取正在播放的歌曲信息。")
                 .setPositiveButton("去授权", (d, w) -> {
                     Intent i = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
                     startActivity(i);
@@ -343,6 +392,27 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("取消", null)
                 .show();
     }
+
+
+    /** 弹窗提示用户开启 Android 13+ 通知权限 */
+    private void promptForPostNotificationsPermission() {
+        new AlertDialog.Builder(this)
+                .setTitle("允许通知权限")
+                .setMessage("为了保证糯米播放器在后台正常运行，本应用需要在状态栏权限"
+                        + "🎵。\n\n"
+                        + "在 Android 13 及以上系统，如果不允许通知权限，应用可能会被系统限制后台运行。")
+                .setPositiveButton("去允许", (d, w) -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        requestPermissions(
+                                new String[]{ Manifest.permission.POST_NOTIFICATIONS },
+                                1001  // 自定义请求码
+                        );
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
 
     // ========================= 控制器回调 =========================
 
