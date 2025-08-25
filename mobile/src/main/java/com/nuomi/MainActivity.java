@@ -52,6 +52,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.content.ActivityNotFoundException;
+import android.support.v4.media.MediaMetadataCompat;
+
 
 
 public class MainActivity extends AppCompatActivity {
@@ -360,18 +362,23 @@ public class MainActivity extends AppCompatActivity {
                     ((PlaybackControlsFragment) fragment).updateTitle(title);
                 }
 
-                Bitmap albumArt = meta.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
-                if (albumArt != null) {
+                // 封面位图优先：ALBUM_ART → DISPLAY_ICON → ART
+                Bitmap cover = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
+                if (cover == null) cover = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON);
+                if (cover == null) cover = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_ART);
+
+                if (cover != null) {
                     AlbumCoverFragment frag2 = (AlbumCoverFragment)
                             getSupportFragmentManager().findFragmentById(R.id.playerAlbumCoverFragment);
                     if (frag2 != null) {
-                        frag2.updateCover(albumArt);
+                        frag2.updateCover(cover);
                     } else {
                         Log.w("QqSniffer", "封面Fragment未初始化");
                     }
                 } else {
                     Log.w("QqSniffer", "未获取到封面图");
                 }
+
 
                 String artist = meta.getString(MediaMetadata.METADATA_KEY_ARTIST);
                 PlaybackControlsFragment frag1 = (PlaybackControlsFragment)

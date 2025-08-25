@@ -181,7 +181,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
                 String title = meta.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
                 String artist = meta.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
-                Bitmap art = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
+
                 long duration = meta.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
 
                 // QQ 模式保留 playMode；NCM 没有该私有键，忽略即可
@@ -193,10 +193,24 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, title);
                 builder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist);
 
-                if (art != null)
-                    builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, art);
                 if (duration > 0)
                     builder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration);
+
+                // ✅ 仅在“非 QQ 模式”启用封面位图兜底；QQ 模式保持你原来的只取 ALBUM_ART 行为
+                Bitmap art = null;
+                if (isNcmMode) {
+                    // 非 QQ：位图优先顺序 ALBUM_ART → DISPLAY_ICON → ART
+                    art = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
+                    if (art == null) art = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON);
+                    if (art == null) art = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_ART);
+                } else {
+                    // QQ：保持原逻辑（只取 ALBUM_ART）
+                    art = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
+                }
+
+                if (art != null) {
+                    builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, art);
+                }
 
                 mSession.setMetadata(builder.build());
             }

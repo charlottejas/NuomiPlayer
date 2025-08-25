@@ -67,6 +67,8 @@ public class SessionPickerSheet extends BottomSheetDialogFragment {
                             .putExtra("label", si.appLabel));
 
 
+            SessionDump.dumpFromPicker(requireContext(), si.packageName, si.appLabel);
+
             Toast.makeText(ctx,
                     "选择了：" + si.appLabel + " (" + si.packageName + ")",
                     Toast.LENGTH_SHORT).show();
