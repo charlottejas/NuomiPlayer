@@ -40,7 +40,7 @@ public class NcmLyricsHelper {
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public interface LyricsCallback {
-        void onSuccess(String lyrics);
+        void onSuccess(String lyrics, String translation);
         void onError(String error);
     }
 
@@ -52,8 +52,10 @@ public class NcmLyricsHelper {
     public static void fetchLyrics(String mediaId, LyricsCallback callback) {
         executor.execute(() -> {
             try {
-                String lyrics = fetchLyricsSync(mediaId);
-                mainHandler.post(() -> callback.onSuccess(lyrics));
+                String[] result = fetchLyricsSync(mediaId);
+                String lyrics = result[0];
+                String translation = result[1];
+                mainHandler.post(() -> callback.onSuccess(lyrics, translation));
             } catch (Exception e) {
                 Log.e(TAG, "获取歌词失败", e);
                 mainHandler.post(() -> callback.onError(e.getMessage()));
@@ -63,8 +65,9 @@ public class NcmLyricsHelper {
 
     /**
      * 同步获取歌词（在后台线程调用）
+     * @return String[0]=原文歌词, String[1]=翻译歌词(可能为null)
      */
-    private static String fetchLyricsSync(String mediaId) throws Exception {
+    private static String[] fetchLyricsSync(String mediaId) throws Exception {
         // 1. 准备请求数据
         JSONObject rawData = new JSONObject();
         rawData.put("id", mediaId);
@@ -184,23 +187,39 @@ public class NcmLyricsHelper {
 
     /**
      * 解析歌词响应
+     * @return String[0]=原文, String[1]=翻译(可能为null)
      */
-    private static String parseLyricsResponse(String jsonResponse) throws Exception {
+    private static String[] parseLyricsResponse(String jsonResponse) throws Exception {
         JSONObject json = new JSONObject(jsonResponse);
         
         if (json.optInt("code") != 200) {
             throw new Exception("API返回错误: " + json.optString("msg"));
         }
         
-        // 获取歌词
+        // 获取原文歌词
+        String lyrics = null;
         JSONObject lrc = json.optJSONObject("lrc");
         if (lrc != null) {
-            String lyric = lrc.optString("lyric", "");
-            if (!lyric.isEmpty() && !lyric.equals("null")) {
-                return lyric;
+            lyrics = lrc.optString("lyric", "");
+            if (lyrics.isEmpty() || lyrics.equals("null")) {
+                lyrics = null;
             }
         }
         
-        throw new Exception("歌词数据为空");
+        // 获取翻译歌词
+        String translation = null;
+        JSONObject tlyric = json.optJSONObject("tlyric");
+        if (tlyric != null) {
+            translation = tlyric.optString("lyric", "");
+            if (translation.isEmpty() || translation.equals("null")) {
+                translation = null;
+            }
+        }
+        
+        if (lyrics == null) {
+            throw new Exception("歌词数据为空");
+        }
+        
+        return new String[]{lyrics, translation};
     }
 }

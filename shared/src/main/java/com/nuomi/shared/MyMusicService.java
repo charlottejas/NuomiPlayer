@@ -45,6 +45,8 @@ public class MyMusicService extends MediaBrowserServiceCompat {
     private static final String ACTION_TOGGLE_LYRICS_MODE = "com.nuomi.ACTION_TOGGLE_LYRICS_MODE";
 
     private List<Pair<Long, String>> parsedLyrics = new ArrayList<>();
+    private List<Pair<Long, String>> parsedTranslation = new ArrayList<>(); // 翻译歌词
+    private boolean hasTranslation = false; // 是否有翻译歌词
     private boolean isLyricsMode = false; // 仅 QQ 模式可用；NCM 模式强制关闭
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -350,6 +352,8 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                 // 切歌了，立即清空旧歌词并显示加载提示
                 Log.i("Mirror", "🆕 检测到新歌曲，清空旧歌词");
                 parsedLyrics.clear();
+                parsedTranslation.clear();
+                hasTranslation = false;
                 parsedLyrics.add(new Pair<>(0L, "🎵 歌词加载中..."));
                 parsedLyrics.add(new Pair<>(3000L, "请稍候"));
                 lastLyricsRaw = cacheKey;
@@ -376,8 +380,24 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                 if (parsedLyrics.get(mid).first <= t) { ans = mid; lo = mid + 1; }
                 else hi = mid - 1;
             }
-            if (ans >= 0) current = parsedLyrics.get(ans).second;
-            if (ans + 1 < parsedLyrics.size()) next = parsedLyrics.get(ans + 1).second;
+            
+            if (ans >= 0) {
+                String originalLine = parsedLyrics.get(ans).second;
+                
+                // 判断是否需要显示翻译：有翻译且原文不是中英文
+                if (hasTranslation && !isChinseOrEnglish(originalLine)) {
+                    // 非中英文歌曲：上面显示翻译，下面显示原文
+                    String translatedLine = getTranslationAt(t);
+                    current = translatedLine != null ? translatedLine : originalLine;
+                    next = originalLine;
+                } else {
+                    // 中英文歌曲：显示当前句和下一句
+                    current = originalLine;
+                    if (ans + 1 < parsedLyrics.size()) {
+                        next = parsedLyrics.get(ans + 1).second;
+                    }
+                }
+            }
         }
         
         Log.i("Mirror", "🎤 显示歌词 - 当前: \"" + current + "\" | 下一句: \"" + next + "\" | 时间=" + t + "ms");
@@ -525,19 +545,93 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         }
         Log.i("Mirror", "✅ 歌词解析完成，共解析 " + matchCount + " 行，parsedLyrics.size()=" + parsedLyrics.size());
     }
+    
+    private void parseTranslation(String rawLyrics) {
+        parsedTranslation.clear();
+        Pattern pattern = Pattern.compile("\\[(\\d{2}):(\\d{2}\\.\\d+)\\](.*)");
+        for (String line : rawLyrics.split("\n")) {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.find()) {
+                int min = Integer.parseInt(matcher.group(1));
+                float sec = Float.parseFloat(matcher.group(2));
+                long timeMs = (long) ((min * 60 + sec) * 1000);
+                String text = matcher.group(3).trim();
+                parsedTranslation.add(new Pair<>(timeMs, text));
+            }
+        }
+    }
 
+    // 判断是否为中文或英文
+    private boolean isChinseOrEnglish(String text) {
+        if (text == null || text.isEmpty()) return true;
+        
+        // 检测日文假名(平假名或片假名)
+        for (char c : text.toCharArray()) {
+            Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
+            if (block == Character.UnicodeBlock.HIRAGANA || 
+                block == Character.UnicodeBlock.KATAKANA) {
+                return false; // 包含日文假名,不是中英文
+            }
+        }
+        
+        // 检查是否包含中文字符
+        boolean hasChinese = false;
+        for (char c : text.toCharArray()) {
+            if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS) {
+                hasChinese = true;
+                break;
+            }
+        }
+        
+        // 如果有中文或主要是ASCII,认为是中英文
+        if (hasChinese) return true;
+        
+        int asciiCount = 0;
+        for (char c : text.toCharArray()) {
+            if (c >= 32 && c <= 126) asciiCount++;
+        }
+        return asciiCount > text.length() * 0.8; // 超过80%是ASCII认为是英文
+    }
+    
+    // 获取指定时间的翻译歌词
+    private String getTranslationAt(long timeMs) {
+        if (parsedTranslation.isEmpty()) return null;
+        int lo = 0, hi = parsedTranslation.size() - 1, ans = -1;
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            if (parsedTranslation.get(mid).first <= timeMs) {
+                ans = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        return ans >= 0 ? parsedTranslation.get(ans).second : null;
+    }
+    
     // 异步获取网易云音乐歌词
     private void fetchNcmLyrics(String mediaId) {
         Log.i("Mirror", "🎵 开始获取网易云歌词，mediaId=" + mediaId);
         
         NcmLyricsHelper.fetchLyrics(mediaId, new NcmLyricsHelper.LyricsCallback() {
             @Override
-            public void onSuccess(String lyrics) {
+            public void onSuccess(String lyrics, String translation) {
                 Log.i("Mirror", "✅ 网易云歌词获取成功，歌词长度=" + lyrics.length());
                 Log.i("Mirror", "📝 歌词原始内容前100字符: " + lyrics.substring(0, Math.min(100, lyrics.length())));
-                // 解析歌词（这会替换掉"加载中"的临时歌词）
+                
+                // 解析原文歌词
                 parseLyrics(lyrics);
                 Log.i("Mirror", "🔍 解析后 parsedLyrics 数量=" + parsedLyrics.size());
+                
+                // 解析翻译歌词（如果存在）
+                if (translation != null && !translation.isEmpty()) {
+                    parseTranslation(translation);
+                    hasTranslation = true;
+                    Log.i("Mirror", "🌐 翻译歌词解析完成，数量=" + parsedTranslation.size());
+                } else {
+                    parsedTranslation.clear();
+                    hasTranslation = false;
+                }
                 
                 // 强制刷新显示：直接调用歌词更新器
                 handler.post(lyricsUpdater);
