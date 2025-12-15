@@ -537,6 +537,14 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         MediaMetadataCompat.Builder b = new MediaMetadataCompat.Builder();
         b.putString(MediaMetadataCompat.METADATA_KEY_TITLE, current);
         b.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, next);
+        
+        String originalTitle = meta.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+        String originalArtist = meta.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+        if (originalTitle != null && originalArtist != null) {
+            b.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, originalTitle + " - " + originalArtist);
+        } else if (originalTitle != null) {
+            b.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, originalTitle);
+        }
 
         Bitmap art = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
         if (art != null) b.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, art);
@@ -1079,9 +1087,26 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                 for (android.media.session.MediaController c : byPkg.values()) {
                     String pkg = c.getPackageName();
                     String label = pkg;
+                    Bitmap icon = null;
                     try {
-                        label = getPackageManager().getApplicationLabel(
-                                getPackageManager().getApplicationInfo(pkg, 0)).toString();
+                        android.content.pm.ApplicationInfo appInfo = getPackageManager().getApplicationInfo(pkg, 0);
+                        label = getPackageManager().getApplicationLabel(appInfo).toString();
+                        // 获取应用图标
+                        android.graphics.drawable.Drawable drawable = getPackageManager().getApplicationIcon(appInfo);
+                        if (drawable instanceof android.graphics.drawable.BitmapDrawable) {
+                            icon = ((android.graphics.drawable.BitmapDrawable) drawable).getBitmap();
+                        } else {
+                            // 转换 Drawable 为 Bitmap
+                            int w = drawable.getIntrinsicWidth();
+                            int h = drawable.getIntrinsicHeight();
+                            if (w > 0 && h > 0) {
+                                Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                                android.graphics.Canvas canvas = new android.graphics.Canvas(bmp);
+                                drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                                drawable.draw(canvas);
+                                icon = bmp;
+                            }
+                        }
                     } catch (Exception ignore) {}
                     
                     String nowPlaying = null;
@@ -1093,13 +1118,16 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                     
                     String subtitle = nowPlaying != null ? "正在播放: " + nowPlaying : "点击选择此播放器";
                     
-                    MediaDescriptionCompat desc = new MediaDescriptionCompat.Builder()
+                    MediaDescriptionCompat.Builder descBuilder = new MediaDescriptionCompat.Builder()
                             .setMediaId(pkg)
                             .setTitle(label)
-                            .setSubtitle(subtitle)
-                            .build();
+                            .setSubtitle(subtitle);
                     
-                    items.add(new MediaBrowserCompat.MediaItem(desc,
+                    if (icon != null) {
+                        descBuilder.setIconBitmap(icon);
+                    }
+                    
+                    items.add(new MediaBrowserCompat.MediaItem(descBuilder.build(),
                             MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
                 }
                 
