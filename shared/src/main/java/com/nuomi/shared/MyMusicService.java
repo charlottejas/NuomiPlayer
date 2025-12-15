@@ -1,5 +1,6 @@
 package com.nuomi.shared;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -14,6 +15,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.media.MediaBrowserServiceCompat;
@@ -27,7 +29,11 @@ import android.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,6 +80,18 @@ public class MyMusicService extends MediaBrowserServiceCompat {
     private static final String MODE_NCM = "NCM";
     private static final String MODE_OTHER = "OTHER";
     private String musicMode = MODE_QQ;  // 当前模式，默认QQ音乐
+    
+    // 车机端播放器列表监听
+    private final List<android.media.session.MediaController> carMonitoredControllers = new ArrayList<>();
+    private final android.media.session.MediaController.Callback carRefreshCallback = 
+        new android.media.session.MediaController.Callback() {
+            @Override
+            public void onMetadataChanged(android.media.MediaMetadata metadata) {
+                // 播放内容变化，通知车机刷新列表
+                notifyChildrenChanged("root");
+                Log.i(TAG, "🚗 播放内容变化，刷新车机列表");
+            }
+        };
 
     // 新增：防止重复激活
     private boolean sessionActivated = false;
@@ -919,6 +937,32 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                     }, 500);
                 }
             }
+            
+            @Override
+            public void onPlayFromMediaId(String mediaId, Bundle extras) {
+                // 车机端点击选择播放器
+                Log.i("Mirror", "🚗 车机端选择播放器: " + mediaId);
+                
+                // 获取应用名称
+                String appLabel = mediaId;
+                try {
+                    appLabel = getPackageManager().getApplicationLabel(
+                            getPackageManager().getApplicationInfo(mediaId, 0)).toString();
+                } catch (Exception ignore) {}
+                
+                // 保存到 SharedPreferences
+                SharedPreferences sp = getSharedPreferences("session_pref", MODE_PRIVATE);
+                sp.edit()
+                        .putString("last_pkg", mediaId)
+                        .putString("last_label", appLabel)
+                        .apply();
+                
+                Log.i("Mirror", "✅ 已选择播放器: " + appLabel + " (" + mediaId + ")");
+                
+                // 请求 Sniffer 立即重新发送 Token
+                Intent reqToken = new Intent("com.nuomi.REQUEST_TOKEN");
+                LocalBroadcastManager.getInstance(MyMusicService.this).sendBroadcast(reqToken);
+            }
         });
 
         // 同时注册 QQ / NCM 的 Token 广播
@@ -984,6 +1028,90 @@ public class MyMusicService extends MediaBrowserServiceCompat {
     @Override
     public void onLoadChildren(@NonNull String parentId,
                                @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
-        result.sendResult(Collections.emptyList());
+        if ("root".equals(parentId)) {
+            // 返回播放器选择列表
+            List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
+            
+            try {
+                // 清理旧监听
+                for (android.media.session.MediaController c : carMonitoredControllers) {
+                    try { c.unregisterCallback(carRefreshCallback); } catch (Exception ignore) {}
+                }
+                carMonitoredControllers.clear();
+                
+                // 获取活跃的播放器列表
+                android.media.session.MediaSessionManager msm =
+                        (android.media.session.MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+                
+                // 使用字符串形式创建 ComponentName（因为 SessionSnifferService 在 mobile 模块）
+                ComponentName listener = new ComponentName(getPackageName(), 
+                        getPackageName() + ".SessionSnifferService");
+                java.util.List<android.media.session.MediaController> controllers = null;
+                
+                try {
+                    controllers = msm.getActiveSessions(listener);
+                } catch (SecurityException e) {
+                    // 如果没有权限，尝试使用 null
+                    try {
+                        controllers = msm.getActiveSessions(null);
+                    } catch (Exception ignore) {}
+                }
+                
+                if (controllers == null) {
+                    controllers = new ArrayList<>();
+                }
+                
+                // 去重并过滤自身包名
+                String self = getPackageName();
+                Map<String, android.media.session.MediaController> byPkg = new LinkedHashMap<>();
+                for (android.media.session.MediaController c : controllers) {
+                    String pkg = c.getPackageName();
+                    if (pkg == null || pkg.equals(self)) continue;
+                    if (!byPkg.containsKey(pkg)) {
+                        byPkg.put(pkg, c);
+                        // 注册监听，当播放内容变化时刷新车机列表
+                        c.registerCallback(carRefreshCallback);
+                        carMonitoredControllers.add(c);
+                    }
+                }
+                
+                // 构建可浏览项
+                for (android.media.session.MediaController c : byPkg.values()) {
+                    String pkg = c.getPackageName();
+                    String label = pkg;
+                    try {
+                        label = getPackageManager().getApplicationLabel(
+                                getPackageManager().getApplicationInfo(pkg, 0)).toString();
+                    } catch (Exception ignore) {}
+                    
+                    String nowPlaying = null;
+                    android.media.MediaMetadata md = c.getMetadata();
+                    if (md != null) {
+                        CharSequence t = md.getText(android.media.MediaMetadata.METADATA_KEY_TITLE);
+                        if (t != null && t.length() > 0) nowPlaying = t.toString();
+                    }
+                    
+                    String subtitle = nowPlaying != null ? "正在播放: " + nowPlaying : "点击选择此播放器";
+                    
+                    MediaDescriptionCompat desc = new MediaDescriptionCompat.Builder()
+                            .setMediaId(pkg)
+                            .setTitle(label)
+                            .setSubtitle(subtitle)
+                            .build();
+                    
+                    items.add(new MediaBrowserCompat.MediaItem(desc,
+                            MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
+                }
+                
+                Log.i("Mirror", "🚗 车机端请求播放器列表，返回 " + items.size() + " 个");
+                
+            } catch (Exception e) {
+                Log.e("Mirror", "❌ 获取播放器列表失败", e);
+            }
+            
+            result.sendResult(items);
+        } else {
+            result.sendResult(Collections.emptyList());
+        }
     }
 }
