@@ -65,8 +65,11 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
     private String lastLyricsRaw = null;
 
-    // 新增：当前是否处于“网易云模式”
-    private boolean isNcmMode = false;  // false=QQ 模式；true=非QQ（任意播放器）模式
+    // 三种模式：QQ音乐、网易云音乐、其他
+    private static final String MODE_QQ = "QQ";
+    private static final String MODE_NCM = "NCM";
+    private static final String MODE_OTHER = "OTHER";
+    private String musicMode = MODE_QQ;  // 当前模式，默认QQ音乐
 
     // 新增：防止重复激活
     private boolean sessionActivated = false;
@@ -75,7 +78,8 @@ public class MyMusicService extends MediaBrowserServiceCompat {
     private static final String TAG = "Mirror";
 
     private void updateSessionActive(String reason) {
-        boolean should = (!isNcmMode && isLyricsMode); // 只有 QQ + 歌词模式 才激活
+        // QQ 或 网易云 + 歌词模式 才激活
+        boolean should = ((MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) && isLyricsMode);
         if (mSession.isActive() != should) {
             mSession.setActive(should);
             Log.i(TAG, "setActive=" + should + " reason=" + reason);
@@ -109,29 +113,29 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         }
     }
 
-    // 每秒刷新（仅 QQ 歌词模式）
+    // 每秒刷新（QQ 和网易云歌词模式）
     private final Runnable lyricsUpdater = new Runnable() {
         @Override
         public void run() {
-            if (!isNcmMode && isLyricsMode && remoteCtrl != null) {
+            if ((MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) && isLyricsMode && remoteCtrl != null) {
                 applyLyricsOverlay(lastRemoteMeta);
                 handler.postDelayed(this, 1000);
             }
         }
     };
 
-    // “自动开启歌词模式”广播，仅 QQ 模式生效
+    // "自动开启歌词模式"广播，QQ 和网易云模式生效
     private final BroadcastReceiver autoLyricsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.i("Mirror", "📨 收到自动开启歌词模式请求");
-            if (isNcmMode) { // 非QQ模式
-                Log.i("Mirror", "ℹ️ 当前为【非 QQ 模式】，忽略开启歌词模式请求");
+            if (MODE_OTHER.equals(musicMode)) { // 其他模式不支持歌词
+                Log.i("Mirror", "ℹ️ 当前为【其他模式】，忽略开启歌词模式请求");
                 return;
             }
             if (!isLyricsMode) {
                 isLyricsMode = true;
-                Log.i("Mirror", "🎵 已开启歌词模式（QQ）");
+                Log.i("Mirror", "🎵 已开启歌词模式（" + musicMode + "）");
 
                 if (lastRemoteState != null) {
                     basePosMs = lastRemoteState.getPosition();
@@ -172,11 +176,11 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
         // --- 1. 同步元数据 ---
         if (meta != null) {
-            if (!isNcmMode && isLyricsMode) {
-                // QQ 歌词模式：覆盖为“当前句/下一句”
+            if ((MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) && isLyricsMode) {
+                // QQ/网易云 歌词模式：覆盖为"当前句/下一句"
                 applyLyricsOverlay(meta);
             } else {
-                // QQ 非歌词模式 或 NCM 模式：原样映射标准字段
+                // QQ/网易云 非歌词模式 或 其他模式：原样映射标准字段
                 MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder();
 
                 String title = meta.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
@@ -184,8 +188,8 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
                 long duration = meta.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
 
-                // QQ 模式保留 playMode；NCM 没有该私有键，忽略即可
-                if (!isNcmMode) {
+                // QQ 模式保留 playMode；网易云/其他 没有该私有键，忽略即可
+                if (MODE_QQ.equals(musicMode)) {
                     long playMode = meta.getLong("ucar.media.metadata.PLAY_MODE");
                     lastPlayMode = (int) playMode;
                 }
@@ -198,7 +202,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
                 // ✅ 仅在“非 QQ 模式”启用封面位图兜底；QQ 模式保持你原来的只取 ALBUM_ART 行为
                 Bitmap art = null;
-                if (isNcmMode) {
+                if (!MODE_QQ.equals(musicMode)) {
                     // 非 QQ：位图优先顺序 ALBUM_ART → DISPLAY_ICON → ART
                     art = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
                     if (art == null) art = meta.getBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON);
@@ -219,8 +223,8 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         // --- 2. 同步播放状态 ---
         if (st != null) {
 
-            // QQ 歌词模式专用分支（NCM 模式强制关闭歌词，不走此分支）
-            if (!isNcmMode && isLyricsMode) {
+            // QQ/网易云 歌词模式专用分支（其他模式强制关闭歌词，不走此分支）
+            if ((MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) && isLyricsMode) {
                 if (!suppressRemoteState) {
                     basePosMs = st.getPosition();
                     baseSpeed = st.getPlaybackSpeed();
@@ -244,20 +248,23 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                                         PlaybackStateCompat.ACTION_PLAY_PAUSE
                         );
 
-                // 自定义按钮（仅 QQ 模式展示）
+                // 自定义按钮（QQ 和网易云模式展示）
                 int lyricsIconRes = isLyricsMode ? R.drawable.ic_lyrics_24dp : R.drawable.ic_lyrics_outline_24dp;
                 builder.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
                         CUSTOM_ACTION_SHOW_LYRICS, "歌词", lyricsIconRes).build());
 
-                int repeatIconRes;
-                switch (lastPlayMode) {
-                    case 1: repeatIconRes = R.drawable.ic_repeat_one_24dp; break;
-                    case 0: repeatIconRes = R.drawable.ic_shuffle_24dp;    break;
-                    case 2:
-                    default: repeatIconRes = R.drawable.ic_repeat_24dp;    break;
+                // 循环按钮仅 QQ 模式显示
+                if (MODE_QQ.equals(musicMode)) {
+                    int repeatIconRes;
+                    switch (lastPlayMode) {
+                        case 1: repeatIconRes = R.drawable.ic_repeat_one_24dp; break;
+                        case 0: repeatIconRes = R.drawable.ic_shuffle_24dp;    break;
+                        case 2:
+                        default: repeatIconRes = R.drawable.ic_repeat_24dp;    break;
+                    }
+                    builder.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
+                            CUSTOM_ACTION_REPEAT_MODE, "循环", repeatIconRes).build());
                 }
-                builder.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
-                        CUSTOM_ACTION_REPEAT_MODE, "循环", repeatIconRes).build());
 
                 mSession.setPlaybackState(builder.build());
                 return;
@@ -282,39 +289,52 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                     );
 
             // 仅 QQ 模式下加入自定义按钮；NCM 模式完全关闭“歌词/循环”按钮
-            if (!isNcmMode) {
+            if (MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) {
                 int lyricsIconRes = isLyricsMode ? R.drawable.ic_lyrics_24dp : R.drawable.ic_lyrics_outline_24dp;
                 builder.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
                         CUSTOM_ACTION_SHOW_LYRICS, "歌词", lyricsIconRes).build());
 
-                int repeatIconRes = R.drawable.ic_repeat_24dp;
-                if (meta != null) {
-                    long playMode = meta.getLong("ucar.media.metadata.PLAY_MODE");
-                    switch ((int) playMode) {
-                        case 1: repeatIconRes = R.drawable.ic_repeat_one_24dp; break;
-                        case 0: repeatIconRes = R.drawable.ic_shuffle_24dp;    break;
-                        case 2:
-                        default: repeatIconRes = R.drawable.ic_repeat_24dp;    break;
+                // 循环按钮仅 QQ 模式显示
+                if (MODE_QQ.equals(musicMode)) {
+                    int repeatIconRes = R.drawable.ic_repeat_24dp;
+                    if (meta != null) {
+                        long playMode = meta.getLong("ucar.media.metadata.PLAY_MODE");
+                        switch ((int) playMode) {
+                            case 1: repeatIconRes = R.drawable.ic_repeat_one_24dp; break;
+                            case 0: repeatIconRes = R.drawable.ic_shuffle_24dp;    break;
+                            case 2:
+                            default: repeatIconRes = R.drawable.ic_repeat_24dp;    break;
+                        }
                     }
+                    builder.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
+                            CUSTOM_ACTION_REPEAT_MODE, "循环", repeatIconRes).build());
                 }
-                builder.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
-                        CUSTOM_ACTION_REPEAT_MODE, "循环", repeatIconRes).build());
             }
 
             mSession.setPlaybackState(builder.build());
         }
     }
 
-    // 仅在“QQ 歌词模式”调用：把当前/下一句覆盖到元数据
+    // 在"QQ/网易云 歌词模式"调用：把当前/下一句覆盖到元数据
     private void applyLyricsOverlay(MediaMetadataCompat meta) {
-        if (isNcmMode || !isLyricsMode || meta == null) return;
+        if (MODE_OTHER.equals(musicMode) || !isLyricsMode || meta == null) return;
 
-        long playMode = meta.getLong("ucar.media.metadata.PLAY_MODE");
-        lastPlayMode = (int) playMode;
+        // QQ 模式有 playMode
+        if (MODE_QQ.equals(musicMode)) {
+            long playMode = meta.getLong("ucar.media.metadata.PLAY_MODE");
+            lastPlayMode = (int) playMode;
+        }
         long dur = meta.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
         if (dur > 0) durationMs = dur;
 
-        String lyricsWhole = meta.getString("ucar.media.metadata.LYRICS_WHOLE");
+        // 获取歌词：QQ 模式从元数据获取，网易云模式使用占位歌词
+        String lyricsWhole = null;
+        if (MODE_QQ.equals(musicMode)) {
+            lyricsWhole = meta.getString("ucar.media.metadata.LYRICS_WHOLE");
+        } else if (MODE_NCM.equals(musicMode)) {
+            lyricsWhole = getNcmPlaceholderLyrics();
+        }
+        
         if (lyricsWhole != null && !lyricsWhole.equals(lastLyricsRaw)) {
             lastLyricsRaw = lyricsWhole;
             parseLyrics(lyricsWhole);
@@ -361,15 +381,18 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         ps.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
                 CUSTOM_ACTION_SHOW_LYRICS, "歌词", lyricsIconRes).build());
 
-        int repeatIconRes;
-        switch (lastPlayMode) {
-            case 1: repeatIconRes = R.drawable.ic_repeat_one_24dp; break;
-            case 0: repeatIconRes = R.drawable.ic_shuffle_24dp;    break;
-            case 2:
-            default: repeatIconRes = R.drawable.ic_repeat_24dp;    break;
+        // 循环按钮仅 QQ 模式显示
+        if (MODE_QQ.equals(musicMode)) {
+            int repeatIconRes;
+            switch (lastPlayMode) {
+                case 1: repeatIconRes = R.drawable.ic_repeat_one_24dp; break;
+                case 0: repeatIconRes = R.drawable.ic_shuffle_24dp;    break;
+                case 2:
+                default: repeatIconRes = R.drawable.ic_repeat_24dp;    break;
+            }
+            ps.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
+                    CUSTOM_ACTION_REPEAT_MODE, "循环", repeatIconRes).build());
         }
-        ps.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
-                CUSTOM_ACTION_REPEAT_MODE, "循环", repeatIconRes).build());
 
         mSession.setPlaybackState(ps.build());
     }
@@ -396,20 +419,29 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                 return;
             }
 
-            // 3) 根据来源是否 QQ 切换模式（非 QQ → 旧 NCM 逻辑）
-            boolean toNonQqMode = !"com.tencent.qqmusic".equals(sourcePkg);
-            if (toNonQqMode != isNcmMode) {
-                isNcmMode = toNonQqMode;
-                if (isNcmMode) {
-                    Log.i("Mirror", "🔄 切换为【非 QQ 模式】（禁用歌词/自定义按钮），来源=" + sourcePkg);
+            // 3) 根据来源包名确定模式：QQ、网易云或其他
+            String newMode;
+            if ("com.tencent.qqmusic".equals(sourcePkg)) {
+                newMode = MODE_QQ;
+            } else if ("com.netease.cloudmusic".equals(sourcePkg)) {
+                newMode = MODE_NCM;
+            } else {
+                newMode = MODE_OTHER;
+            }
+            
+            if (!newMode.equals(musicMode)) {
+                String oldMode = musicMode;
+                musicMode = newMode;
+                Log.i("Mirror", "🔄 切换为【" + musicMode + " 模式】，来源=" + sourcePkg);
+                
+                // 如果切换到"其他"模式，关闭歌词
+                if (MODE_OTHER.equals(musicMode)) {
                     if (isLyricsMode) {
                         isLyricsMode = false;
                         handler.removeCallbacks(lyricsUpdater);
                         suppressRemoteState = false;
-                        Log.i("Mirror", "🧹 已关闭歌词模式并清理定时任务（进入非QQ）");
+                        Log.i("Mirror", "🧹 已关闭歌词模式并清理定时任务（进入其他模式）");
                     }
-                } else {
-                    Log.i("Mirror", "🔄 切换为【QQ 模式】（可用歌词/自定义按钮）");
                 }
             }
 
@@ -460,6 +492,16 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         }
     }
 
+    // 网易云音乐歌词占位函数：返回固定的示例歌词
+    private String getNcmPlaceholderLyrics() {
+        return "[00:00.00]网易云音乐歌词显示功能\n" +
+               "[00:03.00]这是一段示例歌词\n" +
+               "[00:06.00]🎵 当前播放的是网易云音乐\n" +
+               "[00:10.00]歌词功能开发中\n" +
+               "[00:14.00]敬请期待\n" +
+               "[00:18.00]感谢使用糯米播放器";
+    }
+
     // =========================================================
     // 🚀 启动服务：初始化本地 MediaSession 并设置转发逻辑
     // =========================================================
@@ -502,7 +544,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                     remoteCtrl.getTransportControls().seekTo(positionMs);
                 }
 
-                if (!isNcmMode && isLyricsMode) {
+                if ((MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) && isLyricsMode) {
                     suppressRemoteState = true;
                     handler.removeCallbacks(clearSuppression);
                     handler.postDelayed(clearSuppression, 1200);
@@ -528,8 +570,8 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
             @Override
             public void onCustomAction(String action, Bundle extras) {
-                // NCM 模式下直接忽略自定义按钮
-                if (isNcmMode) return;
+                // 其他模式下直接忽略自定义按钮
+                if (MODE_OTHER.equals(musicMode)) return;
 
                 if (CUSTOM_ACTION_SHOW_LYRICS.equals(action)) {
                     isLyricsMode = !isLyricsMode;
@@ -578,11 +620,11 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         lbm.registerReceiver(autoLyricsReceiver, new IntentFilter(ACTION_TOGGLE_LYRICS_MODE));
 
 
-        // 自动歌词模式：仅在 QQ 模式下可自动开启（NCM 模式忽略）
+        // 自动歌词模式：QQ 和网易云模式可自动开启
         SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
         boolean autoLyrics = prefs.getBoolean("autoLyrics", false);
         Log.i("Mirror", "🎚 autoLyrics 开关状态 = " + autoLyrics);
-        if (autoLyrics && !isNcmMode && !isLyricsMode) {
+        if (autoLyrics && (MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) && !isLyricsMode) {
             isLyricsMode = true;
 
             if (lastRemoteState != null) {

@@ -152,28 +152,16 @@ public class MainActivity extends AppCompatActivity {
         activeSource = SRC_NCM.equals(savedSrc) ? SRC_NCM : SRC_QQ;
 
         // 4) 初始化两个开关
-        // 4.1 歌词模式开关
-        // 4.1 歌词模式开关（加了网易云模式的两道安全措施）
+        // 4.1 歌词模式开关（QQ 和网易云音乐都支持歌词）
         SwitchCompat switchLyrics = findViewById(R.id.switch_lyrics_mode);
 
-// 如果当前是网易云模式，则强制把歌词开关置为关闭
-        boolean initialLyrics = autoLyrics && !SRC_NCM.equals(activeSource);
-        switchLyrics.setChecked(initialLyrics);
+        // 初始状态：根据activeSource和autoLyrics设置
+        switchLyrics.setChecked(autoLyrics);
 
         switchLyrics.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (suppressLyricsToggle) return;
 
-            // 安全措施 2：网易云模式下，拦截用户尝试开启，并提示
-            if (SRC_NCM.equals(activeSource) && isChecked) {
-                suppressLyricsToggle = true;
-                switchLyrics.setChecked(false);                 // 立刻回拨
-                suppressLyricsToggle = false;
-                Toast.makeText(MainActivity.this, "网易云音乐暂不支持歌词模式", Toast.LENGTH_SHORT).show();
-                prefs.edit().putBoolean("autoLyrics", false).apply();
-                return;
-            }
-
-            // 正常路径（仅 QQ 模式允许修改）
+            // 正常路径（QQ 和网易云音乐都允许修改）
             prefs.edit().putBoolean("autoLyrics", isChecked).apply();
             if (isChecked) {
                 // 用户开启后立即激活歌词模式（由 MyMusicService 监听本地广播）
@@ -182,13 +170,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-// 启动时如果偏好是 true 且当前是 QQ 模式，按原逻辑主动开启
-        if (autoLyrics && SRC_QQ.equals(activeSource)) {
+        // 启动时如果偏好是 true，主动开启歌词模式
+        if (autoLyrics) {
             Intent intent = new Intent("com.nuomi.ACTION_TOGGLE_LYRICS_MODE");
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        } else if (autoLyrics && SRC_NCM.equals(activeSource)) {
-            // 安全措施 1（启动时也生效）：如果偏好里本来是开，但当前是网易云，强制关并落盘
-            prefs.edit().putBoolean("autoLyrics", false).apply();
         }
 
 
@@ -210,16 +195,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this,
                         isChecked ? "已切换到网易云模式" : "已切换到QQ音乐模式",
                         Toast.LENGTH_SHORT).show();
-
-                // ✅ 切到网易云：强制把歌词开关关掉，并把偏好改为 false
-                if (isChecked) {
-                    if (switchLyrics.isChecked()) {
-                        suppressLyricsToggle = true;
-                        switchLyrics.setChecked(false);
-                        suppressLyricsToggle = false;
-                    }
-                    prefs.edit().putBoolean("autoLyrics", false).apply();
-                }
 
                 // 请求对应 Sniffer 立刻重发 Token（这样无需等播放/切歌）
                 LocalBroadcastManager.getInstance(this).sendBroadcast(
