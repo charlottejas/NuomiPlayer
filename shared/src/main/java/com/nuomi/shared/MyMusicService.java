@@ -48,6 +48,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
     private List<Pair<Long, String>> parsedTranslation = new ArrayList<>(); // 翻译歌词
     private boolean hasTranslation = false; // 是否有翻译歌词
     private boolean isLyricsMode = false; // 仅 QQ 模式可用；NCM 模式强制关闭
+    private boolean userWantsLyrics = false; // 用户是否想要歌词模式（记录用户意图）
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private int lastPlayMode = 0; // QQ 的播放模式缓存
@@ -66,6 +67,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
     private long durationMs = 0L;
 
     private String lastLyricsRaw = null;
+    private boolean isInstrumental = false;  // 标记当前歌曲是否为纯音乐
 
     // 三种模式：QQ音乐、网易云音乐、其他
     private static final String MODE_QQ = "QQ";
@@ -137,6 +139,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
             }
             if (!isLyricsMode) {
                 isLyricsMode = true;
+                userWantsLyrics = true; // 同步用户意图
                 Log.i("Mirror", "🎵 已开启歌词模式（" + musicMode + "）");
 
                 if (lastRemoteState != null) {
@@ -178,6 +181,44 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
         // --- 1. 同步元数据 ---
         if (meta != null) {
+            // 检查是否需要自动开启歌词模式（在调用 applyLyricsOverlay 之前）
+            if ((MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) && !isLyricsMode) {
+                // 检测是否是新歌曲
+                boolean isNewSong = false;
+                if (MODE_QQ.equals(musicMode)) {
+                    String lyricsWhole = meta.getString("ucar.media.metadata.LYRICS_WHOLE");
+                    isNewSong = lyricsWhole != null && !lyricsWhole.equals(lastLyricsRaw);
+                } else if (MODE_NCM.equals(musicMode)) {
+                    String mediaId = meta.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
+                    String cacheKey = "ncm_" + mediaId;
+                    isNewSong = mediaId != null && !cacheKey.equals(lastLyricsRaw);
+                }
+                
+                Log.i("Mirror", "[调试-mirror] isNewSong=" + isNewSong + ", isLyricsMode=" + isLyricsMode);
+                
+                if (isNewSong) {
+                    // 检查自动开启歌词设置
+                    SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+                    boolean autoLyrics = prefs.getBoolean("autoLyrics", false);
+                    
+                    if (autoLyrics) {
+                        isLyricsMode = true;
+                        userWantsLyrics = true;
+                        Log.i("Mirror", "🔄 检测到新歌曲，自动开启歌词模式");
+                        
+                        if (lastRemoteState != null) {
+                            basePosMs = lastRemoteState.getPosition();
+                            baseSpeed = lastRemoteState.getPlaybackSpeed();
+                            baseState = lastRemoteState.getState();
+                            baseUpdateElapsed = SystemClock.elapsedRealtime();
+                        }
+                        
+                        handler.post(lyricsUpdater);
+                        updateSessionActive("mirror中自动开启歌词模式");
+                    }
+                }
+            }
+            
             if ((MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) && isLyricsMode) {
                 // QQ/网易云 歌词模式：覆盖为"当前句/下一句"
                 applyLyricsOverlay(meta);
@@ -319,9 +360,11 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
     // 在"QQ/网易云 歌词模式"调用：把当前/下一句覆盖到元数据
     private void applyLyricsOverlay(MediaMetadataCompat meta) {
-        if (MODE_OTHER.equals(musicMode) || !isLyricsMode || meta == null) return;
+        if (MODE_OTHER.equals(musicMode) || meta == null) return;
         
-        Log.i("Mirror", "📝 applyLyricsOverlay 被调用，当前 parsedLyrics.size()=" + parsedLyrics.size());
+        if (!isLyricsMode) {
+            return;
+        }
 
         // QQ 模式有 playMode
         if (MODE_QQ.equals(musicMode)) {
@@ -335,8 +378,42 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         String lyricsWhole = null;
         if (MODE_QQ.equals(musicMode)) {
             lyricsWhole = meta.getString("ucar.media.metadata.LYRICS_WHOLE");
+            Log.i("Mirror", "[调试] QQ模式, lyricsWhole!=null: " + (lyricsWhole != null) + ", lastLyricsRaw=" + lastLyricsRaw);
+            
             if (lyricsWhole != null && !lyricsWhole.equals(lastLyricsRaw)) {
-                // 切歌了，立即清空旧歌词并解析新歌词
+                Log.i("Mirror", "[调试] QQ模式检测到新歌曲");
+                // 切歌了，检查是否需要自动开启歌词模式
+                SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+                boolean autoLyrics = prefs.getBoolean("autoLyrics", false);
+                Log.i("Mirror", "[调试] autoLyrics=" + autoLyrics + ", isLyricsMode=" + isLyricsMode);
+                
+                if (autoLyrics && !isLyricsMode) {
+                    isLyricsMode = true;
+                    userWantsLyrics = true;
+                    Log.i("Mirror", "🎵 检测到新歌曲，自动开启歌词模式");
+                    
+                    if (lastRemoteState != null) {
+                        basePosMs = lastRemoteState.getPosition();
+                        baseSpeed = lastRemoteState.getPlaybackSpeed();
+                        baseState = lastRemoteState.getState();
+                        baseUpdateElapsed = SystemClock.elapsedRealtime();
+                    }
+                    
+                    // 立即清空旧歌词并解析新歌词
+                    parsedLyrics.clear();
+                    lastLyricsRaw = lyricsWhole;
+                    parseLyrics(lyricsWhole);
+                    
+                    handler.post(lyricsUpdater);
+                    // 重新调用mirror触发更新
+                    if (remoteCtrl != null) {
+                        mirror(remoteCtrl.getMetadata(), remoteCtrl.getPlaybackState());
+                    }
+                    updateSessionActive("自动开启歌词模式");
+                    return; // 已经处理完，直接返回
+                }
+                
+                // 立即清空旧歌词并解析新歌词
                 parsedLyrics.clear();
                 lastLyricsRaw = lyricsWhole;
                 parseLyrics(lyricsWhole);
@@ -346,10 +423,47 @@ public class MyMusicService extends MediaBrowserServiceCompat {
             String mediaId = meta.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
             String cacheKey = "ncm_" + mediaId;
             
-            Log.i("Mirror", "🔍 检查网易云歌词，mediaId=" + mediaId + ", cacheKey=" + cacheKey + ", lastLyricsRaw=" + lastLyricsRaw);
-            
             if (mediaId != null && !cacheKey.equals(lastLyricsRaw)) {
-                // 切歌了，立即清空旧歌词并显示加载提示
+                Log.i("Mirror", "[调试] 网易云模式检测到新歌曲");
+                // 切歌了，检查是否需要自动开启歌词模式
+                SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+                boolean autoLyrics = prefs.getBoolean("autoLyrics", false);
+                Log.i("Mirror", "[调试] autoLyrics=" + autoLyrics + ", isLyricsMode=" + isLyricsMode);
+                
+                if (autoLyrics && !isLyricsMode) {
+                    isLyricsMode = true;
+                    userWantsLyrics = true;
+                    Log.i("Mirror", "🎵 检测到新歌曲，自动开启歌词模式");
+                    
+                    if (lastRemoteState != null) {
+                        basePosMs = lastRemoteState.getPosition();
+                        baseSpeed = lastRemoteState.getPlaybackSpeed();
+                        baseState = lastRemoteState.getState();
+                        baseUpdateElapsed = SystemClock.elapsedRealtime();
+                    }
+                    
+                    // 立即清空旧歌词并显示加载提示
+                    Log.i("Mirror", "🆕 检测到新歌曲，清空旧歌词");
+                    parsedLyrics.clear();
+                    parsedTranslation.clear();
+                    hasTranslation = false;
+                    parsedLyrics.add(new Pair<>(0L, "🎵 歌词加载中..."));
+                    parsedLyrics.add(new Pair<>(3000L, "请稍候"));
+                    lastLyricsRaw = cacheKey;
+                    
+                    // 异步获取新歌词
+                    fetchNcmLyrics(mediaId);
+                    
+                    handler.post(lyricsUpdater);
+                    // 重新调用mirror触发更新
+                    if (remoteCtrl != null) {
+                        mirror(remoteCtrl.getMetadata(), remoteCtrl.getPlaybackState());
+                    }
+                    updateSessionActive("自动开启歌词模式");
+                    return; // 已经处理完，直接返回
+                }
+                
+                // 立即清空旧歌词并显示加载提示
                 Log.i("Mirror", "🆕 检测到新歌曲，清空旧歌词");
                 parsedLyrics.clear();
                 parsedTranslation.clear();
@@ -361,7 +475,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                 // 异步获取新歌词
                 fetchNcmLyrics(mediaId);
             } else {
-                Log.i("Mirror", "♻️ 同一首歌，使用缓存歌词，parsedLyrics.size()=" + parsedLyrics.size());
+                // Log.i("Mirror", "♻️ 同一首歌，使用缓存歌词，parsedLyrics.size()=" + parsedLyrics.size());
             }
             // 如果是同一首歌，继续使用已缓存的歌词
         }
@@ -400,7 +514,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
             }
         }
         
-        Log.i("Mirror", "🎤 显示歌词 - 当前: \"" + current + "\" | 下一句: \"" + next + "\" | 时间=" + t + "ms");
+        // Log.i("Mirror", "🎤 显示歌词 - 当前: \"" + current + "\" | 下一句: \"" + next + "\" | 时间=" + t + "ms");
 
         MediaMetadataCompat.Builder b = new MediaMetadataCompat.Builder();
         b.putString(MediaMetadataCompat.METADATA_KEY_TITLE, current);
@@ -487,6 +601,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                 if (MODE_OTHER.equals(musicMode)) {
                     if (isLyricsMode) {
                         isLyricsMode = false;
+                        userWantsLyrics = false; // 重置用户意图
                         handler.removeCallbacks(lyricsUpdater);
                         suppressRemoteState = false;
                         Log.i("Mirror", "🧹 已关闭歌词模式并清理定时任务（进入其他模式）");
@@ -528,7 +643,30 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
     private void parseLyrics(String rawLyrics) {
         parsedLyrics.clear();
+        isInstrumental = false;  // 重置纯音乐标志
+        
         Log.i("Mirror", "📋 开始解析歌词，原始长度=" + rawLyrics.length());
+        
+        // 检测是否为纯音乐
+        if (rawLyrics != null && rawLyrics.contains("纯音乐，请欣赏")) {
+            isInstrumental = true;
+            Log.i("Mirror", "🎼 检测到纯音乐，自动关闭歌词模式, 当前isLyricsMode=" + isLyricsMode);
+            
+            // 自动关闭歌词模式（模拟点击歌词按钮）
+            if (isLyricsMode) {
+                isLyricsMode = false;
+                handler.removeCallbacks(lyricsUpdater);
+                suppressRemoteState = false;
+                
+                // 触发mirror更新，恢复正常显示
+                if (remoteCtrl != null) {
+                    mirror(remoteCtrl.getMetadata(), remoteCtrl.getPlaybackState());
+                }
+                updateSessionActive("纯音乐自动关闭歌词模式");
+            }
+            return;  // 纯音乐不需要解析歌词
+        }
+        
         // 支持任意位数小数的时间戳格式: [00:24.28] [00:24.287] [00:24.2] 等
         Pattern pattern = Pattern.compile("\\[(\\d{2}):(\\d{2}\\.\\d+)\\](.*)");
         int matchCount = 0;
@@ -544,6 +682,25 @@ public class MyMusicService extends MediaBrowserServiceCompat {
             }
         }
         Log.i("Mirror", "✅ 歌词解析完成，共解析 " + matchCount + " 行，parsedLyrics.size()=" + parsedLyrics.size());
+        
+        // 如果用户想要歌词模式，但当前被纯音乐关闭了，重新开启
+        if (userWantsLyrics && !isLyricsMode) {
+            isLyricsMode = true;
+            Log.i("Mirror", "🔄 检测到正常歌曲，恢复歌词模式");
+            
+            if (lastRemoteState != null) {
+                basePosMs = lastRemoteState.getPosition();
+                baseSpeed = lastRemoteState.getPlaybackSpeed();
+                baseState = lastRemoteState.getState();
+                baseUpdateElapsed = SystemClock.elapsedRealtime();
+            }
+            
+            handler.post(lyricsUpdater);
+            if (remoteCtrl != null) {
+                mirror(remoteCtrl.getMetadata(), remoteCtrl.getPlaybackState());
+            }
+            updateSessionActive("恢复歌词模式");
+        }
     }
     
     private void parseTranslation(String rawLyrics) {
@@ -728,6 +885,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
                 if (CUSTOM_ACTION_SHOW_LYRICS.equals(action)) {
                     isLyricsMode = !isLyricsMode;
+                    userWantsLyrics = isLyricsMode; // 同步用户意图
 
                     if (isLyricsMode) {
                         if (lastRemoteState != null) {
@@ -779,6 +937,7 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         Log.i("Mirror", "🎚 autoLyrics 开关状态 = " + autoLyrics);
         if (autoLyrics && (MODE_QQ.equals(musicMode) || MODE_NCM.equals(musicMode)) && !isLyricsMode) {
             isLyricsMode = true;
+            userWantsLyrics = true; // 同步用户意图
 
             if (lastRemoteState != null) {
                 basePosMs = lastRemoteState.getPosition();
