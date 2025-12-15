@@ -96,9 +96,10 @@ public class MainActivity extends AppCompatActivity {
             String pkg = getSharedPreferences("session_pref", MODE_PRIVATE)
                     .getString("last_pkg", null);
             boolean isQQ = "com.tencent.qqmusic".equals(pkg);
+            boolean isNCM = "com.netease.cloudmusic".equals(pkg);
 
             suppressLyricsToggle = true;
-            sw.setChecked(autoLyrics && isQQ);  // 非QQ时自动回拨为关；回到QQ且autoLyrics=true时自动打开
+            sw.setChecked(autoLyrics && (isQQ || isNCM));  // QQ或网易云时根据设置显示；其他时自动回拨为关
             suppressLyricsToggle = false;
         }
     };
@@ -249,9 +250,10 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences selSp = getSharedPreferences("session_pref", MODE_PRIVATE);
         String chosenPkg = selSp.getString("last_pkg", null);
         boolean isQQSelected = "com.tencent.qqmusic".equals(chosenPkg);
+        boolean isNCMSelected = "com.netease.cloudmusic".equals(chosenPkg);
 
-        // 只有当选择的是 QQ 且偏好为 true 才默认勾选
-        switchLyrics.setChecked(autoLyrics && isQQSelected);
+        // 只有当选择的是 QQ 或网易云且偏好为 true 才默认勾选
+        switchLyrics.setChecked(autoLyrics && (isQQSelected || isNCMSelected));
 
         switchLyrics.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (suppressLyricsToggle) return;
@@ -260,18 +262,19 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences curSel = getSharedPreferences("session_pref", MODE_PRIVATE);
             String currentPkg = curSel.getString("last_pkg", null);
             boolean isQQ = "com.tencent.qqmusic".equals(currentPkg);
+            boolean isNCM = "com.netease.cloudmusic".equals(currentPkg);
 
-            // 非 QQ 音乐：禁止开启歌词模式并回拨
-            if (!isQQ && isChecked) {
+            // 非 QQ/网易云音乐：禁止开启歌词模式并回拨
+            if (!isQQ && !isNCM && isChecked) {
                 suppressLyricsToggle = true;
                 switchLyrics.setChecked(false);   // 立刻回拨
                 suppressLyricsToggle = false;
-                Toast.makeText(MainActivity.this, "当前选择的 App 不支持歌词模式（仅 QQ 音乐）", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "当前选择的 App 不支持歌词模式（仅 QQ 音乐和网易云音乐）", Toast.LENGTH_SHORT).show();
                 prefs.edit().putBoolean("autoLyrics", false).apply();
                 return;
             }
 
-            // QQ 音乐：正常落盘与通知
+            // QQ 音乐或网易云音乐：正常落盘与通知
             prefs.edit().putBoolean("autoLyrics", isChecked).apply();
             if (isChecked) {
                 // 用户开启后立即激活歌词模式（由 MyMusicService 监听本地广播）
