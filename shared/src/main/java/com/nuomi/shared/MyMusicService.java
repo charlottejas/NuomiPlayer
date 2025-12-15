@@ -318,6 +318,8 @@ public class MyMusicService extends MediaBrowserServiceCompat {
     // 在"QQ/网易云 歌词模式"调用：把当前/下一句覆盖到元数据
     private void applyLyricsOverlay(MediaMetadataCompat meta) {
         if (MODE_OTHER.equals(musicMode) || !isLyricsMode || meta == null) return;
+        
+        Log.i("Mirror", "📝 applyLyricsOverlay 被调用，当前 parsedLyrics.size()=" + parsedLyrics.size());
 
         // QQ 模式有 playMode
         if (MODE_QQ.equals(musicMode)) {
@@ -327,17 +329,42 @@ public class MyMusicService extends MediaBrowserServiceCompat {
         long dur = meta.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
         if (dur > 0) durationMs = dur;
 
-        // 获取歌词：QQ 模式从元数据获取，网易云模式使用占位歌词
+        // 获取歌词：QQ 模式从元数据获取，网易云模式从 API 获取
         String lyricsWhole = null;
         if (MODE_QQ.equals(musicMode)) {
             lyricsWhole = meta.getString("ucar.media.metadata.LYRICS_WHOLE");
+            if (lyricsWhole != null && !lyricsWhole.equals(lastLyricsRaw)) {
+                // 切歌了，立即清空旧歌词并解析新歌词
+                parsedLyrics.clear();
+                lastLyricsRaw = lyricsWhole;
+                parseLyrics(lyricsWhole);
+            }
         } else if (MODE_NCM.equals(musicMode)) {
-            lyricsWhole = getNcmPlaceholderLyrics();
+            // 网易云音乐：从 API 异步获取歌词
+            String mediaId = meta.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
+            String cacheKey = "ncm_" + mediaId;
+            
+            Log.i("Mirror", "🔍 检查网易云歌词，mediaId=" + mediaId + ", cacheKey=" + cacheKey + ", lastLyricsRaw=" + lastLyricsRaw);
+            
+            if (mediaId != null && !cacheKey.equals(lastLyricsRaw)) {
+                // 切歌了，立即清空旧歌词并显示加载提示
+                Log.i("Mirror", "🆕 检测到新歌曲，清空旧歌词");
+                parsedLyrics.clear();
+                parsedLyrics.add(new Pair<>(0L, "🎵 歌词加载中..."));
+                parsedLyrics.add(new Pair<>(3000L, "请稍候"));
+                lastLyricsRaw = cacheKey;
+                
+                // 异步获取新歌词
+                fetchNcmLyrics(mediaId);
+            } else {
+                Log.i("Mirror", "♻️ 同一首歌，使用缓存歌词，parsedLyrics.size()=" + parsedLyrics.size());
+            }
+            // 如果是同一首歌，继续使用已缓存的歌词
         }
         
-        if (lyricsWhole != null && !lyricsWhole.equals(lastLyricsRaw)) {
-            lastLyricsRaw = lyricsWhole;
-            parseLyrics(lyricsWhole);
+        // 如果歌词为空，直接返回（避免显示空白）
+        if (parsedLyrics.isEmpty()) {
+            return;
         }
 
         long t = clockPosition();
@@ -352,6 +379,8 @@ public class MyMusicService extends MediaBrowserServiceCompat {
             if (ans >= 0) current = parsedLyrics.get(ans).second;
             if (ans + 1 < parsedLyrics.size()) next = parsedLyrics.get(ans + 1).second;
         }
+        
+        Log.i("Mirror", "🎤 显示歌词 - 当前: \"" + current + "\" | 下一句: \"" + next + "\" | 时间=" + t + "ms");
 
         MediaMetadataCompat.Builder b = new MediaMetadataCompat.Builder();
         b.putString(MediaMetadataCompat.METADATA_KEY_TITLE, current);
@@ -479,7 +508,9 @@ public class MyMusicService extends MediaBrowserServiceCompat {
 
     private void parseLyrics(String rawLyrics) {
         parsedLyrics.clear();
+        Log.i("Mirror", "📋 开始解析歌词，原始长度=" + rawLyrics.length());
         Pattern pattern = Pattern.compile("\\[(\\d{2}):(\\d{2}\\.\\d{2})\\](.*)");
+        int matchCount = 0;
         for (String line : rawLyrics.split("\n")) {
             Matcher matcher = pattern.matcher(line);
             if (matcher.find()) {
@@ -488,18 +519,45 @@ public class MyMusicService extends MediaBrowserServiceCompat {
                 long timeMs = (long) ((min * 60 + sec) * 1000);
                 String text = matcher.group(3).trim();
                 parsedLyrics.add(new Pair<>(timeMs, text));
+                matchCount++;
             }
         }
+        Log.i("Mirror", "✅ 歌词解析完成，共解析 " + matchCount + " 行，parsedLyrics.size()=" + parsedLyrics.size());
     }
 
-    // 网易云音乐歌词占位函数：返回固定的示例歌词
+    // 异步获取网易云音乐歌词
+    private void fetchNcmLyrics(String mediaId) {
+        Log.i("Mirror", "🎵 开始获取网易云歌词，mediaId=" + mediaId);
+        
+        NcmLyricsHelper.fetchLyrics(mediaId, new NcmLyricsHelper.LyricsCallback() {
+            @Override
+            public void onSuccess(String lyrics) {
+                Log.i("Mirror", "✅ 网易云歌词获取成功，歌词长度=" + lyrics.length());
+                Log.i("Mirror", "📝 歌词原始内容前100字符: " + lyrics.substring(0, Math.min(100, lyrics.length())));
+                // 解析歌词（这会替换掉"加载中"的临时歌词）
+                parseLyrics(lyrics);
+                Log.i("Mirror", "🔍 解析后 parsedLyrics 数量=" + parsedLyrics.size());
+                
+                // 强制刷新显示：直接调用歌词更新器
+                handler.post(lyricsUpdater);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("Mirror", "❌ 网易云歌词获取失败: " + error);
+                // 使用占位歌词作为后备
+                parseLyrics(getNcmPlaceholderLyrics());
+                // 刷新显示
+                handler.post(lyricsUpdater);
+            }
+        });
+    }
+
+    // 网易云音乐歌词占位函数：作为 API 失败时的后备
     private String getNcmPlaceholderLyrics() {
-        return "[00:00.00]网易云音乐歌词显示功能\n" +
-               "[00:03.00]这是一段示例歌词\n" +
-               "[00:06.00]🎵 当前播放的是网易云音乐\n" +
-               "[00:10.00]歌词功能开发中\n" +
-               "[00:14.00]敬请期待\n" +
-               "[00:18.00]感谢使用糯米播放器";
+        return "[00:00.00]网易云音乐\n" +
+               "[00:03.00]歌词加载中...\n" +
+               "[00:06.00]🎵 请稍候";
     }
 
     // =========================================================
