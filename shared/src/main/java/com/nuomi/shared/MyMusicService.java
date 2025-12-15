@@ -509,7 +509,8 @@ public class MyMusicService extends MediaBrowserServiceCompat {
     private void parseLyrics(String rawLyrics) {
         parsedLyrics.clear();
         Log.i("Mirror", "📋 开始解析歌词，原始长度=" + rawLyrics.length());
-        Pattern pattern = Pattern.compile("\\[(\\d{2}):(\\d{2}\\.\\d{2})\\](.*)");
+        // 支持任意位数小数的时间戳格式: [00:24.28] [00:24.287] [00:24.2] 等
+        Pattern pattern = Pattern.compile("\\[(\\d{2}):(\\d{2}\\.\\d+)\\](.*)");
         int matchCount = 0;
         for (String line : rawLyrics.split("\n")) {
             Matcher matcher = pattern.matcher(line);
