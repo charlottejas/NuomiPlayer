@@ -8,11 +8,11 @@
 
 NuomiPlayer mirrors track information and playback controls from your phone's music apps to Android Auto. See the title, artist, artwork, progress, and time-synced lyrics from supported sources while keeping your existing player and playlists. Audio continues to play through the original music app.
 
-> **3.0 preview:** This page showcases the 3.0 interface and improvements. A 3.0 APK has not yet been published in this repository. The currently available download is **2.0**, whose interface and features may differ from these previews. This notice will be updated when the 3.0 APK and corresponding source are published.
+> **NuomiPlayer 3.0 is available!** [Download the 3.0 APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [Release notes](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.0). Requires **Android 13 or later** and an Android Auto-compatible setup.
 
-[Download the current 2.0 APK](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) · [Versions and downloads](#versions-and-downloads) · [Getting started](#getting-started) · [Report an issue](https://github.com/charlottejas/NuomiPlayer/issues)
+[Download NuomiPlayer 3.0](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [Versions and downloads](#versions-and-downloads) · [Getting started](#getting-started) · [Report an issue](https://github.com/charlottejas/NuomiPlayer/issues)
 
-## 3.0 preview
+## Meet NuomiPlayer 3.0
 
 The images below use Chinese captions. Select an image to view it at full size.
 
@@ -27,7 +27,7 @@ The images below use Chinese captions. Select an image to view it at full size.
   </tr>
 </table>
 
-## What's changing in 3.0
+## What's new in 3.0
 
 - **Time-synced lyrics, now including Qishui Music.** Adds Qishui/Luna lyrics alongside QQ Music and NetEase Cloud Music. Availability depends on the track, source, and network.
 - **Two lyric layouts.** Choose the current and next lyric lines, or keep the track title above the current lyric. Preview the layout on your phone and confirm to save. Enable lyrics by default or toggle them from the car screen.
@@ -55,7 +55,7 @@ Your account, subscription, track availability, and audio playback remain the re
 
 ## Getting started
 
-These instructions describe the 3.0 preview. Labels and screens may differ in 2.0.
+Install the [3.0 APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) on a phone running Android 13 or later, then follow these steps.
 
 1. **Configure Android Auto.** Enable developer mode and select Unknown sources in developer settings. If NuomiPlayer appears under Customize launcher, enable it and reconnect the car. See the [official Android testing documentation](https://developer.android.com/training/cars/testing).
 2. **Grant notification access.** NuomiPlayer needs this permission to connect to music-app media sessions. The 3.0 guide explains permission purposes and links to system settings. Launch notifications support the flow for opening a music app from the car.
@@ -78,8 +78,10 @@ These instructions describe the 3.0 preview. Labels and screens may differ in 2.
 
 | Version | Availability |
 | --- | --- |
-| 3.0 | Interface and feature preview; APK and corresponding source not yet published on the main branch |
-| 2.0 | Currently available APK: [Download NuomiPlayer 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) |
+| **3.0** | **Latest release:** [Download APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [Release notes](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.0) |
+| 2.0 | Previous version: [Download NuomiPlayer 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) |
+
+The APK is published as a Release asset. The repository source has not yet been synchronized with this 3.0 build; GitHub’s automatically generated source archives are not the corresponding 3.0 source.
 
 <details>
 <summary>Earlier versions and changelog</summary>

@@ -8,11 +8,11 @@
 
 糯米播放器把手机音乐 App 的歌曲信息和播放控制同步到 Android Auto，让你继续使用熟悉的播放器和歌单，在车机查看歌名、歌手、封面、进度，以及支持来源的实时歌词。音乐仍由原来的音乐 App 播放。
 
-> **3.0 预览：** 本页展示 3.0 的界面与升级内容，3.0 APK 暂未在本仓库发布。当前可下载版本为 **2.0**，其界面和功能与下方预览可能不同。3.0 安装包及对应源码发布后，将更新此处说明。
+> **糯米播放器 3.0 已发布！** [点击下载 3.0 安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [查看更新说明](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.0)。需要 **Android 13 或以上版本**，并搭配支持 Android Auto 的使用环境。
 
-[下载当前版本 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) · [版本与下载](#版本与下载) · [使用指南](#使用指南) · [问题反馈](https://github.com/charlottejas/NuomiPlayer/issues)
+[下载糯米播放器 3.0](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [版本与下载](#版本与下载) · [使用指南](#使用指南) · [问题反馈](https://github.com/charlottejas/NuomiPlayer/issues)
 
-## 3.0 界面预览
+## 3.0 界面展示
 
 <table>
   <tr>
@@ -53,7 +53,7 @@
 
 ## 使用指南
 
-以下流程面向 3.0 预览；2.0 的入口名称和界面可能不同。
+在 Android 13 或以上版本的手机上安装 [3.0 安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk)，然后按以下步骤设置。
 
 1. **配置 Android Auto。** 开启开发者模式，在开发者设置中勾选「未知来源」。如自定义启动器中出现糯米播放器，请勾选后重新连接车机。可参考 [Android 官方测试文档](https://developer.android.com/training/cars/testing)。
 2. **开启通知读取权限。** 糯米需要通过该权限连接音乐 App 的媒体会话。3.0 会说明权限用途，并提供系统设置入口；「启动通知」用于从车机发起打开音乐 App 的流程。
@@ -76,8 +76,10 @@
 
 | 版本 | 状态与下载 |
 | --- | --- |
-| 3.0 | 界面与功能预览；APK 与对应源码暂未发布到主分支 |
-| 2.0 | 当前已提供的安装包：[下载糯米播放器 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) |
+| **3.0** | **最新版本：**[下载安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [更新说明](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.0) |
+| 2.0 | 历史版本：[下载糯米播放器 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) |
+
+安装包通过 Release 附件提供；仓库源码尚未同步到此 3.0 构建，GitHub 自动生成的源码压缩包不是该安装包的对应源码。
 
 <details>
 <summary>历史版本与更新记录</summary>
