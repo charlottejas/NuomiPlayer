@@ -2,116 +2,113 @@
   <a href="./README.zh-CN.md">中文</a> | <b>English</b>
 </p>
 
-# NuomiPlayer - Android Auto Music Companion
+# NuomiPlayer · An Android Auto music companion
 
-🚗🎶 NuomiPlayer is an Android Auto companion app that extends in-car playback experience by **mirroring media metadata and controls from your phone**, providing a cleaner UI, richer info, and **time-synced lyrics**.
+**Bring the music apps you already use along for the ride.**
 
-I built this after realizing that **QQ Music does not support Android Auto**, while many Android Auto–ready apps don’t include the songs I listen to most. Existing workarounds were either outdated or unstable (e.g., frequent crashes), so I decided to build a lightweight and reliable solution for my own daily driving.
+NuomiPlayer mirrors track information and playback controls from your phone's music apps to Android Auto. See the title, artist, artwork, progress, and time-synced lyrics from supported sources while keeping your existing player and playlists. Audio continues to play through the original music app.
 
-> Note: I had little prior Android app experience. To accelerate development, part of the **phone playback UI** was adapted from the open-source project **Booming Music** (see Credits). If any usage violates the original license, please contact me and I will promptly fix or remove the relevant code.
+> **3.0 preview:** This page showcases the 3.0 interface and improvements. A 3.0 APK has not yet been published in this repository. The currently available download is **2.0**, whose interface and features may differ from these previews. This notice will be updated when the 3.0 APK and corresponding source are published.
 
-Download latest prebuilt APKs:
-- 📦 NuomiPlayer 2.0: https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk
+[Download the current 2.0 APK](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) · [Versions and downloads](#versions-and-downloads) · [Getting started](#getting-started) · [Report an issue](https://github.com/charlottejas/NuomiPlayer/issues)
 
-## Disclaimer
+## 3.0 preview
 
-This project is for **personal learning and research** only.  
-- It does **not** include any music resources.
-- It does **not** provide any music streaming API.
-- Media data is obtained from system signals (e.g., **MediaSession / notifications / broadcast**), and is intended to avoid copyright infringement.
+The images below use Chinese captions. Select an image to view it at full size.
 
-If any third-party code usage raises licensing concerns, please reach out and I will respond quickly.
+<table>
+  <tr>
+    <td><a href="screenshot/v3-preview/android-auto-lyrics.png"><img src="screenshot/v3-preview/android-auto-lyrics.png" width="480" alt="Time-synced lyrics in the complete Android Auto playback screen" /></a></td>
+    <td><a href="screenshot/v3-preview/lyrics-modes.png"><img src="screenshot/v3-preview/lyrics-modes.png" width="480" alt="Two lyric layouts: current and next lines, or track title and current lyric" /></a></td>
+  </tr>
+  <tr>
+    <td><a href="screenshot/v3-preview/ui-refresh.png"><img src="screenshot/v3-preview/ui-refresh.png" width="480" alt="Redesigned phone player and car settings" /></a></td>
+    <td><a href="screenshot/v3-preview/built-in-guide.png"><img src="screenshot/v3-preview/built-in-guide.png" width="480" alt="Built-in onboarding and connection troubleshooting" /></a></td>
+  </tr>
+</table>
 
-## Features
+## What's changing in 3.0
 
-- 🚘 Android Auto playback screen support
-- 🎵 Reads media metadata from most playback apps (based on system MediaSession / notifications)
-- ⏯️ Play / Pause / Previous / Next controls
-- ⏩ Seek bar with drag-to-seek support
-- 🖼️ Title / Artist / Album art display
-- 📝 Time-synced lyrics view (Android Auto)
+- **Time-synced lyrics, now including Qishui Music.** Adds Qishui/Luna lyrics alongside QQ Music and NetEase Cloud Music. Availability depends on the track, source, and network.
+- **Two lyric layouts.** Choose the current and next lyric lines, or keep the track title above the current lyric. Preview the layout on your phone and confirm to save. Enable lyrics by default or toggle them from the car screen.
+- **A refreshed phone interface.** Redesigned player, source picker, and car settings, with prominent artwork and clearer connection, player, permission, and preference controls.
+- **Music sources and favorites.** Scan and select active players on your phone, or find them under Favorites and Currently Available in the car. Save frequently used sources and initiate opening a music app from Android Auto.
+- **Built-in onboarding.** Five steps cover the workflow, Android Auto setup, permissions, lyrics, and preferences. Reopen the guide whenever needed.
+- **Connection troubleshooting.** Guided checks and settings links for missing sources, stale track information, a missing Android Auto entry, and missing lyrics.
+- **Connection and track-transition improvements.** Refines recovery after normal background process reclamation, player-session changes, playback-state synchronization, artwork flicker and mismatched metadata, and delayed QQ lyrics or missed track updates.
+- **Clearer status messages.** Distinguishes loading lyrics, unavailable lyrics, video content, and loading failures, and improves player names, unavailable-source messages, launch failures, and permission status.
 
-## Screenshots
+## Music app compatibility
 
-### 🚘 Android Auto Playback
-![Android Auto Playback](screenshot/auto.jpg)
+NuomiPlayer reads track information and forwards controls through Android media sessions. It can work with many music apps that expose these capabilities. **General playback compatibility does not imply universal lyric support.** The table below describes 3.0 support.
 
-### 📝 Android Auto Lyrics
-![Android Auto Lyrics](screenshot/lyrics.jpg)
+| Source | Track information and basic controls | Time-synced lyrics | Shuffle / repeat controls |
+| --- | --- | --- | --- |
+| QQ Music | Supported | Supported | Supported |
+| NetEase Cloud Music | Supported | Supported | Supported |
+| Qishui Music / Luna | Supported | Supported | Not currently provided |
+| Other music apps | Depends on the app's system media capabilities | Not currently supported | Not guaranteed |
 
-### 📱 Phone UI
-<div style="display:flex; gap:10px;">
-  <img src="screenshot/mobile.jpg" width="360"/>
-  <img src="screenshot/mobile_1.jpg" width="360"/>
-</div>
+Basic controls include play, pause, previous, and next. Track information includes title, artist, artwork, and progress. Seeking depends on the source and head unit; seeking compatibility in lyric mode remains under investigation.
 
-## Changelog
+Your account, subscription, track availability, and audio playback remain the responsibility of the original music app. App and system updates can affect compatibility.
 
-### 1.4.1
-- Removed some permission requirements
+## Getting started
 
-### 1.4.0
-- Upgraded from a platform-specific adaptation to a **general solution**, now compatible with **most playback apps** (music / podcast / video) via system MediaSession/notifications
-- Fixed multiple edge cases and reduced crash probability
+These instructions describe the 3.0 preview. Labels and screens may differ in 2.0.
 
-### 1.3.1
-- Fixed inability to open NetEase Cloud Music
+1. **Configure Android Auto.** Enable developer mode and select Unknown sources in developer settings. If NuomiPlayer appears under Customize launcher, enable it and reconnect the car. See the [official Android testing documentation](https://developer.android.com/training/cars/testing).
+2. **Grant notification access.** NuomiPlayer needs this permission to connect to music-app media sessions. The 3.0 guide explains permission purposes and links to system settings. Launch notifications support the flow for opening a music app from the car.
+3. **Play a track in your music app first.** Return to NuomiPlayer, select Switch, scan, and choose the active source.
+4. **Set your car preferences.** Choose a lyric layout, whether lyrics should appear by default, and whether the current source should be saved to Favorites.
+5. **Connect and use Android Auto.** Open NuomiPlayer from the car launcher. Use the phone's guide or Connection Help if something is missing.
 
-### 1.3.0
-- Added NetEase Cloud Music mirroring support
+### Troubleshooting
 
-### 1.2.0
-- Added playback mode switching (in order / single loop / shuffle)
-- Added “enable lyrics mode by default” option
+| Problem | What to check |
+| --- | --- |
+| Music source is missing | Check notification access, play something in the original music app, and scan again. The picker lists discovered active players, not every installed app. |
+| Track information is stale | Confirm the original app is playing, reselect the source, and check system background restrictions. |
+| NuomiPlayer is missing in the car | Check Unknown sources and Customize launcher in Android Auto, then reconnect. |
+| Lyrics are missing | Check the source, track, and lyric toggle. Online lyrics also depend on the network and upstream service. |
+| Background recovery fails | System background policies can affect recovery. A deliberate Force stop is different from normal background process reclamation and requires reopening the app. |
+| APK installation is restricted | Consult your phone manufacturer's official installation instructions. Android developers can also build from the repository source. |
 
-### 1.1.0
-- Added real-time lyrics synced with playback progress
+## Versions and downloads
 
-### 1.0.0
-- First stable release
-- QQ Music mirroring support
-- Android Auto mode
-- Basic playback controls
+| Version | Availability |
+| --- | --- |
+| 3.0 | Interface and feature preview; APK and corresponding source not yet published on the main branch |
+| 2.0 | Currently available APK: [Download NuomiPlayer 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) |
 
-## APK Downloads
+<details>
+<summary>Earlier versions and changelog</summary>
 
-Download prebuilt APKs:
-- 📦 NuomiPlayer 1.4.1: https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.4.1.apk  
-  (Fewer permissions; recommended if 1.4.0 fails to install on some OEM devices)
-- 📦 NuomiPlayer 1.4.0: https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.4.0.apk  
-  (General solution; recommended for most users)
-- 📦 NuomiPlayer 1.3.1: https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.3.1.apk
-- 📦 NuomiPlayer 1.2.0: https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.2.0.apk
-- 📦 NuomiPlayer 1.1.0: https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.1.0.apk
-- 📦 NuomiPlayer 1.0.0: https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器%201.0.0.apk
+- [1.4.1](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.4.1.apk): Reduced permission requirements.
+- [1.4.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.4.0.apk): Expanded from specific players to a general system-media-session approach and improved exception handling.
+- [1.3.1](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.3.1.apk): Fixed opening NetEase Cloud Music.
+- [1.3.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.3.0.apk): Added NetEase Cloud Music support.
+- [1.2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.2.0.apk): Added playback-mode switching and a default-lyrics option.
+- [1.1.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.1.0.apk): Added time-synced lyrics.
+- [1.0.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器%201.0.0.apk): Initial QQ Music, Android Auto, and basic playback-control support.
 
-> Make sure Android Auto developer settings allow installing apps from unknown sources (see Run Guide).
+</details>
 
-## Run Guide
+## Why I built it
 
-1. Enable Android Auto **Developer Mode**  
-   Official guide: https://developer.android.com/training/cars/testing
+After buying a car, I found that my usual QQ Music setup did not work directly with Android Auto, while switching players meant losing access to songs I regularly listened to. After trying other solutions, I started building NuomiPlayer to solve my own in-car listening problem.
 
-2. In Android Auto developer settings, enable **Unknown sources**
+This is a personally maintained open-source project. Feedback and contributions are welcome. If it helps you, a GitHub star is appreciated!
 
-3. Start Android Auto emulator or connect your car head unit
+## Music, lyrics, and permissions
 
-4. Start playing any track in your phone music app (e.g., QQ Music).  
-   NuomiPlayer will mirror the playback info and controls in Android Auto.
+- This project is for personal learning and research. It does not include a music catalog, music-download functionality, or subscription unlocking. Audio playback is handled by the original music app.
+- Track information and playback commands use Android system media mechanisms and require the appropriate notification access.
+- In 3.0, QQ lyrics come from the player's media information; NetEase and Qishui lyrics are fetched online using the current track identifier.
+- Rights in lyrics, artwork, and other content remain with their respective rights holders. Upstream app and service availability or rule changes can affect functionality.
 
-> NuomiPlayer listens to system media signals. Make sure a playback app is actively playing.
+## Feedback and credits
 
-## Tech Stack
+Please use [GitHub Issues](https://github.com/charlottejas/NuomiPlayer/issues) and include the NuomiPlayer version, phone model, Android version, music app and version, Android Auto/head-unit environment, and reproduction steps.
 
-- Java & Android SDK
-- Android Auto (`automotive` module)
-- MediaSession & PlaybackStateCompat
-- BroadcastReceiver-based media signal parsing
-- Custom icons & theming
-
-## Credits
-
-Special thanks to **Booming Music**: https://github.com/mardous/BoomingMusic  
-Parts of the phone UI were adapted from this project.
-
-
+Thanks to [Booming Music](https://github.com/mardous/BoomingMusic): parts of the early phone UI were adapted from that project. Third-party code retains its own license requirements. See [LICENSE](LICENSE) for the repository's license information.

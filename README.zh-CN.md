@@ -2,115 +2,111 @@
   <b>中文</b> | <a href="./README.md">English</a>
 </p>
 
-# 糯米播放器 - 音乐App Android Auto 支持
+# 糯米播放器 · Android Auto 音乐伴侣
 
-🚗🎶 一款支持 Android Auto 的音乐App播放扩展工具，旨在提供更优雅的车载音乐体验。  
+**让手机音乐，与车机同行。**
 
-我是在买车后才发现，自己平常使用的 QQ 音乐并不支持 Android Auto，而像 Apple Music 等支持 Android Auto 的 App 又缺少我最常听的歌曲。为了解决这个困扰，我尝试了市面上的各种解决方案，但都不尽如人意。  
+糯米播放器把手机音乐 App 的歌曲信息和播放控制同步到 Android Auto，让你继续使用熟悉的播放器和歌单，在车机查看歌名、歌手、封面、进度，以及支持来源的实时歌词。音乐仍由原来的音乐 App 播放。
 
-其中，AnyAutoAudio 因为开发时间久远，兼容性问题较多，频繁闪退，很难稳定使用。于是我决定自己动手开发一款支持 Android Auto 的 QQ 音乐播放工具，满足自己的车载播放需求。  
+> **3.0 预览：** 本页展示 3.0 的界面与升级内容，3.0 APK 暂未在本仓库发布。当前可下载版本为 **2.0**，其界面和功能与下方预览可能不同。3.0 安装包及对应源码发布后，将更新此处说明。
 
-由于我此前并无 Android App 开发经验，为加快开发进度，手机端播放界面部分直接使用了 Booming Music 的源代码。在此对该项目的原作者表示衷心感谢。如该使用方式不符合原项目的授权或有任何不妥，请及时与我联系，我会立即进行整改或移除。
+[下载当前版本 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) · [版本与下载](#版本与下载) · [使用指南](#使用指南) · [问题反馈](https://github.com/charlottejas/NuomiPlayer/issues)
 
+## 3.0 界面预览
 
-你可以直接下载最新 APK 文件：
-- 📦 [点击下载：糯米播放器 2.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk)
+<table>
+  <tr>
+    <td><a href="screenshot/v3-preview/android-auto-lyrics.png"><img src="screenshot/v3-preview/android-auto-lyrics.png" width="480" alt="Android Auto 也有实时歌词了：完整车机播放画面" /></a></td>
+    <td><a href="screenshot/v3-preview/lyrics-modes.png"><img src="screenshot/v3-preview/lyrics-modes.png" width="480" alt="歌词模式，随心切换：双行歌词与歌名加歌词" /></a></td>
+  </tr>
+  <tr>
+    <td><a href="screenshot/v3-preview/ui-refresh.png"><img src="screenshot/v3-preview/ui-refresh.png" width="480" alt="界面焕新，清爽好用：播放首页和车机设置" /></a></td>
+    <td><a href="screenshot/v3-preview/built-in-guide.png"><img src="screenshot/v3-preview/built-in-guide.png" width="480" alt="内置教程，轻松上手：新手指南和连接帮助" /></a></td>
+  </tr>
+</table>
 
-## 📄 免责声明
+## 3.0 升级内容
 
-本项目仅供个人学习与研究使用，**不包含任何音乐资源**，也不提供音乐服务接口。涉及音乐的数据仅来源于系统媒体广播，不侵犯版权。  
-如项目中引用到的第三方代码存在授权问题，请联系我，我会立即删除或修改
+- **实时歌词，新增汽水音乐适配。** 在 QQ 音乐、网易云音乐的基础上加入汽水音乐歌词，随歌曲播放进度显示。是否有歌词取决于具体歌曲、来源与网络。
+- **歌词模式，随心切换。** 可选择「双行歌词」或「歌名 + 歌词」；手机端提供显示示意，点击确定后保存。支持连接后默认显示歌词，也可在车机手动开关歌词。
+- **界面焕新，清爽好用。** 重新设计手机播放首页、音乐来源选择和车机设置，突出专辑封面，整理连接状态、当前播放器、权限和偏好入口。
+- **音乐来源与常用播放器。** 手机端扫描、选择当前活跃的音乐来源；车机端通过「我的偏好」「当前可用」查找播放器。支持收藏常用来源，以及从车机发起打开音乐 App。
+- **内置教程，轻松上手。** 五步引导涵盖使用流程、Android Auto 配置、权限、歌词和功能设置；之后可随时重新进入指南。
+- **连接帮助，按问题排查。** 针对找不到音乐来源、歌曲信息不更新、车机里找不到糯米、歌词不显示，提供检查步骤和相关设置入口。
+- **连接与切歌体验改进。** 优化普通后台回收后的连接恢复、播放器会话切换、播放状态同步、封面闪烁与信息错配；改进 QQ 歌词延迟和歌曲信息漏更新的处理。
+- **状态提示更清楚。** 区分歌词加载中、无歌词、视频和加载失败；完善播放器名称、不可用来源、打开失败与权限状态提示。
 
-## ✨ 项目特色
+## 音乐 App 支持范围
 
-- 🚘 支持 Android Auto 播放界面展示
-- 🎵 接入音乐App媒体数据（基于系统媒体广播）
-- ⏩ 支持播放进度条及拖动控制
-- ⏯️ 支持播放 / 暂停 / 上一首 / 下一首 控制
-- 🖼️ 显示歌曲标题、艺术家、专辑图等媒体信息
-- 📝 歌词同步显示
+糯米通过 Android 系统媒体会话读取歌曲信息、转发控制，可接入多数提供这些能力的音乐 App。**通用播放支持不等于通用歌词支持。** 下表描述 3.0 的支持范围。
 
-## 📸 界面预览
+| 音乐来源 | 歌曲信息与基本播放控制 | 实时歌词 | 随机 / 循环模式切换 |
+| --- | --- | --- | --- |
+| QQ 音乐 | 支持 | 支持 | 支持 |
+| 网易云音乐 | 支持 | 支持 | 支持 |
+| 汽水音乐 | 支持 | 支持 | 当前不提供 |
+| 其他音乐 App | 取决于 App 提供的系统媒体能力 | 暂不支持 | 暂不承诺支持 |
 
-### 🚘 Android Auto 播放界面
+基本控制包括播放、暂停、上一首、下一首；歌曲信息包括歌名、歌手、封面和进度。进度拖动取决于来源与车机支持，歌词模式下的拖动兼容问题仍在跟进。
 
-![Android Auto 播放界面](screenshot/auto.jpg)
-### 📝 Android Auto 歌词界面
+账号、会员、歌曲可用性和实际音频播放均由原音乐 App 决定。音乐 App 或系统更新可能影响兼容性。
 
-![Android Auto 歌词界面](screenshot/lyrics.jpg)
+## 使用指南
 
-<h3>📱 手机端播放界面</h3>
-<div style="display:flex; gap:10px;">
-  <img src="screenshot/mobile.jpg" width="360"/>
-  <img src="screenshot/mobile_1.jpg" width="360"/>
-</div>
+以下流程面向 3.0 预览；2.0 的入口名称和界面可能不同。
 
+1. **配置 Android Auto。** 开启开发者模式，在开发者设置中勾选「未知来源」。如自定义启动器中出现糯米播放器，请勾选后重新连接车机。可参考 [Android 官方测试文档](https://developer.android.com/training/cars/testing)。
+2. **开启通知读取权限。** 糯米需要通过该权限连接音乐 App 的媒体会话。3.0 会说明权限用途，并提供系统设置入口；「启动通知」用于从车机发起打开音乐 App 的流程。
+3. **先在音乐 App 播放一首歌。** 然后返回糯米，点击「切换」并扫描，选择正在播放的音乐来源。
+4. **调整车机偏好。** 选择歌词显示模式、是否默认显示歌词，以及是否把当前来源加入「我的偏好」。
+5. **连接车机使用。** 打开 Android Auto 中的糯米播放器；遇到问题时，可回到手机端的「使用指南」或「连接帮助」。
 
-## 📋 更新日志（Changelog）
+### 常见问题
 
-### 📦 糯米播放器 1.4.1
-- 移除部分权限需求
+| 问题 | 建议检查 |
+| --- | --- |
+| 找不到音乐来源 | 检查通知读取权限；先在原音乐 App 播放，再重新扫描。列表显示已发现的活跃播放器，不是全部已安装 App。 |
+| 歌曲信息不更新 | 确认原 App 正常播放，重新选择当前音乐来源，同时检查系统后台限制。 |
+| 车机里找不到糯米 | 检查 Android Auto 的未知来源和自定义启动器设置，再重新连接。 |
+| 歌词不显示 | 检查来源与歌曲是否支持歌词、车机是否已开启歌词；联网歌词还受网络和上游服务影响。 |
+| 后台恢复失败 | 系统后台策略可能影响恢复；用户主动「强行停止」应用不属于普通后台回收，需要重新打开应用。 |
+| APK 安装受限 | 请参考手机品牌官方安装说明；熟悉 Android 开发的用户也可以通过仓库源码自行构建。 |
 
-### 📦 糯米播放器 1.4.0
-- 从特定平台适配升级为通用方案，现已支持**绝大部分播放类 App**（音乐/播客/视频等，基于系统 MediaSession/通知）。
-- 修复多个潜在问题，处理若干边界场景，减少异常与闪退概率
+## 版本与下载
 
-### 📦 糯米播放器 1.3.1
-- 修复无法跳转网易云音乐
+| 版本 | 状态与下载 |
+| --- | --- |
+| 3.0 | 界面与功能预览；APK 与对应源码暂未发布到主分支 |
+| 2.0 | 当前已提供的安装包：[下载糯米播放器 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) |
 
-### 📦 糯米播放器 1.3.0
-- 支持网易云音乐投射播放
+<details>
+<summary>历史版本与更新记录</summary>
 
-### 📦 糯米播放器 1.2.0
-- 新增播放模式切换功能（顺序播放 / 单曲循环 / 随机播放）  
-- 增加“默认开启歌词模式”选项，支持自动启用歌词显示  
+- [1.4.1](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.4.1.apk)：减少部分权限需求。
+- [1.4.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.4.0.apk)：从特定平台适配升级为基于系统媒体会话的通用方案，改进异常处理。
+- [1.3.1](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.3.1.apk)：修复打开网易云音乐的问题。
+- [1.3.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.3.0.apk)：增加网易云音乐适配。
+- [1.2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.2.0.apk)：增加播放模式切换与默认开启歌词选项。
+- [1.1.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.1.0.apk)：增加实时歌词。
+- [1.0.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器%201.0.0.apk)：支持 QQ 音乐、Android Auto 与基本播放控制。
 
-### 📦 糯米播放器 1.1.0
-- 新增实时歌词功能，可同步显示歌曲进度对应的歌词  
+</details>
 
-### 📦 糯米播放器 1.0.0
-- 首个稳定版本发布  
-- 支持 QQ 音乐投射播放  
-- 支持 Android Auto 车载模式  
-- 支持基本播放控制（播放 / 暂停 / 上一曲 / 下一曲）
+## 项目初衷
 
-## 📥 APK 下载
+买车后，我发现自己常用的 QQ 音乐没法直接用上 Android Auto，而换成其他播放器又缺少我常听的歌曲。尝试过一些方案后，我决定自己动手，从解决自己的车载听歌需求开始做糯米播放器。
 
-你可以直接下载安装本项目构建的 APK 文件：
-- 📦 [点击下载：糯米播放器 1.4.1.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.4.1.apk) 移除了部分权限需求，国产手机安装不了1.4.0版本的推荐下载这个
-- 📦 [点击下载：糯米播放器 1.4.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.4.0.apk) 从特定平台适配升级为通用方案，现已支持**绝大部分播放类 App**，推荐下载这个
-- 📦 [点击下载：糯米播放器 1.3.1.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.3.1.apk) 增加网易云音乐适配
-- 📦 [点击下载：糯米播放器 1.2.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.2.0.apk) 增加播放模式和默认开启歌词模式选项
-- 📦 [点击下载：糯米播放器 1.1.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器1.1.0.apk)
-- 📦 [点击下载：糯米播放器 1.0.0.apk](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器%201.0.0.apk) 稳定版本
+项目由个人维护，欢迎使用、反馈和参与改进。如果糯米帮到了你，也欢迎给项目点一个 ⭐。
 
+## 音乐、歌词与权限说明
 
-> 请确保已开启 Android Auto 的开发者模式并允许安装未知来源应用，具体步骤见下方运行指南。
+- 本项目用于个人学习与研究，不内置曲库，不提供音乐下载或会员解锁功能；实际音乐播放由原音乐 App 完成。
+- 歌曲信息与播放控制通过 Android 系统媒体会话等机制获取和转发，需要相应的通知读取权限。
+- 3.0 的 QQ 歌词来自播放器提供的媒体信息；网易云音乐和汽水音乐歌词按当前歌曲标识联网获取。
+- 歌词与封面等内容的相关权利属于各自权利人；上游 App 和服务的可用性、规则变化可能影响功能。
 
+## 反馈与致谢
 
-## 🚀 如何运行
+请通过 [GitHub Issues](https://github.com/charlottejas/NuomiPlayer/issues) 反馈问题，并说明糯米版本、手机型号、Android 版本、音乐 App 及版本、Android Auto/车机环境和复现步骤。
 
-1. 打开 Android Auto 的开发者模式  
-   可参考官方文档：[https://developer.android.com/training/cars/testing](https://developer.android.com/training/cars/testing)
-
-2. 在 Android Auto 的开发者设置中，勾选 **“允许未知来源”**
-
-3. 启动 Android Auto 模拟器或连接车机
-
-4. 在手机中打开 QQ 音乐，播放任意歌曲，即可在 Android Auto 中同步控制和查看信息
-
-> 🧪 项目默认监听系统媒体广播（如 QQ 音乐），请确保手机 QQ 音乐正在播放。
-
-## 🛠️ 技术栈
-
-- Java & Android SDK
-- Android Auto (`automotive` 模块)
-- `MediaSession` & `PlaybackStateCompat`
-- BroadcastReceiver 媒体信息解析
-- 自定义图标与主题色适配
-
-## 🙏 特别鸣谢
-
-特别感谢 [**Booming Music**](https://github.com/mardous/BoomingMusic) 项目。  
-本项目手机端界面基于其源代码构建，提供了极大帮助。
-
+感谢 [Booming Music](https://github.com/mardous/BoomingMusic)：早期手机端界面的部分代码基于该项目。第三方代码保留各自的许可要求；仓库许可信息见 [LICENSE](LICENSE)。
