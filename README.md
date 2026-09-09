@@ -104,6 +104,8 @@ This is a personally maintained open-source project. Feedback and contributions 
 
 ## Music, lyrics, and permissions
 
+[Privacy Policy / 隐私权政策](https://charlottejas.github.io/NuomiPlayer/privacy/)
+
 - This project is for personal learning and research. It does not include a music catalog, music-download functionality, or subscription unlocking. Audio playback is handled by the original music app.
 - Track information and playback commands use Android system media mechanisms and require the appropriate notification access.
 - In 3.0, QQ lyrics come from the player's media information; NetEase and Qishui lyrics are fetched online using the current track identifier.
