@@ -8,13 +8,21 @@
 
 NuomiPlayer mirrors track information and playback controls from your phone's music apps to Android Auto. See the title, artist, artwork, progress, and time-synced lyrics from supported sources while keeping your existing player and playlists. Audio continues to play through the original music app.
 
-> **NuomiPlayer 3.0 is available!** [Download the 3.0 APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [Release notes](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.0). Requires **Android 13 or later** and an Android Auto-compatible setup.
+> **NuomiPlayer 3.1 is available!** [Download the 3.1 APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.1/nuomi-player-3.1-release.apk) · [Release notes](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.1). Requires **Android 13 or later** and an Android Auto-compatible setup.
 
-[Download NuomiPlayer 3.0](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [Versions and downloads](#versions-and-downloads) · [Getting started](#getting-started) · [Report an issue](https://github.com/charlottejas/NuomiPlayer/issues)
+[Download NuomiPlayer 3.1](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.1/nuomi-player-3.1-release.apk) · [Versions and downloads](#versions-and-downloads) · [Getting started](#getting-started) · [Report an issue](https://github.com/charlottejas/NuomiPlayer/issues)
 
-## Meet NuomiPlayer 3.0
+## What's new in 3.1
 
-The images below use Chinese captions. Select an image to view it at full size.
+- **QQ Music artwork and lyrics stay in sync.** Fixes artwork disappearing and loaded lyrics being cleared when the artist credits for “Golden” shorten.
+- **More reliable lyric switching.** Fixes identical lyric content being incorrectly rejected during some original/instrumental switches in QQ Music, which previously required reselecting the source.
+- **GitHub update reminders on the phone.** When a newer stable release is available, open its release page to download it. No silent installation, and no update prompt while connected to the car.
+
+**Installation change:** 3.1 uses `com.nuomiplayer`, a separate app from the previous `com.nuomi`. It installs alongside the old app and does not inherit its settings or notification access. Complete setup and enable the new app in Android Auto again. A development build with the same package name but a different signing certificate cannot be overwritten by this release.
+
+## Interface and features
+
+The screenshots below were captured for 3.0 and illustrate the existing playback, lyric-layout, settings and guide screens. They do not show the new 3.1 update prompt. Captions are in Chinese; select an image to view it at full size.
 
 <table>
   <tr>
@@ -40,7 +48,7 @@ The images below use Chinese captions. Select an image to view it at full size.
 
 ## Music app compatibility
 
-NuomiPlayer reads track information and forwards controls through Android media sessions. It can work with many music apps that expose these capabilities. **General playback compatibility does not imply universal lyric support.** The table below describes 3.0 support.
+NuomiPlayer reads track information and forwards controls through Android media sessions. It can work with many music apps that expose these capabilities. **General playback compatibility does not imply universal lyric support.** The table below describes the 3.x feature support.
 
 | Source | Track information and basic controls | Time-synced lyrics | Shuffle / repeat controls |
 | --- | --- | --- | --- |
@@ -55,10 +63,10 @@ Your account, subscription, track availability, and audio playback remain the re
 
 ## Getting started
 
-Install the [3.0 APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) on a phone running Android 13 or later, then follow these steps.
+Install the [3.1 APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.1/nuomi-player-3.1-release.apk) on a phone running Android 13 or later, then follow these steps.
 
 1. **Configure Android Auto.** Enable developer mode and select Unknown sources in developer settings. If NuomiPlayer appears under Customize launcher, enable it and reconnect the car. See the [official Android testing documentation](https://developer.android.com/training/cars/testing).
-2. **Grant notification access.** NuomiPlayer needs this permission to connect to music-app media sessions. The 3.0 guide explains permission purposes and links to system settings. Launch notifications support the flow for opening a music app from the car.
+2. **Grant notification access.** NuomiPlayer needs this permission to connect to music-app media sessions. The built-in guide explains permission purposes and links to system settings. Launch notifications support the flow for opening a music app from the car.
 3. **Play a track in your music app first.** Return to NuomiPlayer, select Switch, scan, and choose the active source.
 4. **Set your car preferences.** Choose a lyric layout, whether lyrics should appear by default, and whether the current source should be saved to Favorites.
 5. **Connect and use Android Auto.** Open NuomiPlayer from the car launcher. Use the phone's guide or Connection Help if something is missing.
@@ -72,16 +80,17 @@ Install the [3.0 APK](https://github.com/charlottejas/NuomiPlayer/releases/downl
 | NuomiPlayer is missing in the car | Check Unknown sources and Customize launcher in Android Auto, then reconnect. |
 | Lyrics are missing | Check the source, track, and lyric toggle. Online lyrics also depend on the network and upstream service. |
 | Background recovery fails | System background policies can affect recovery. A deliberate Force stop is different from normal background process reclamation and requires reopening the app. |
-| APK installation is restricted | Consult your phone manufacturer's official installation instructions. Android developers can also build from the repository source. |
+| APK installation is restricted | Consult your phone manufacturer's official installation instructions. The current APK's corresponding source has not been published yet. |
 
 ## Versions and downloads
 
 | Version | Availability |
 | --- | --- |
-| **3.0** | **Latest release:** [Download APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [Release notes](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.0) |
+| **3.1** | **Latest release:** [Download APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.1/nuomi-player-3.1-release.apk) · [Release notes](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.1) · New package `com.nuomiplayer` |
+| 3.0 | Previous version: [Download APK](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · Package `com.nuomi` |
 | 2.0 | Previous version: [Download NuomiPlayer 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) |
 
-The APK is published as a Release asset. The repository source has not yet been synchronized with this 3.0 build; GitHub’s automatically generated source archives are not the corresponding 3.0 source.
+3.1 is an APK-only release with checksum, manifest and verification attachments. The repository source has not been synchronized with the APK build; its Git tag and GitHub’s automatically generated source archives do not represent the complete source used to build this APK.
 
 <details>
 <summary>Earlier versions and changelog</summary>
@@ -108,7 +117,7 @@ This is a personally maintained open-source project. Feedback and contributions 
 
 - This project is for personal learning and research. It does not include a music catalog, music-download functionality, or subscription unlocking. Audio playback is handled by the original music app.
 - Track information and playback commands use Android system media mechanisms and require the appropriate notification access.
-- In 3.0, QQ lyrics come from the player's media information; NetEase and Qishui lyrics are fetched online using the current track identifier.
+- QQ lyrics come from the player's media information; NetEase and Qishui lyrics are fetched online using the current track identifier.
 - Rights in lyrics, artwork, and other content remain with their respective rights holders. Upstream app and service availability or rule changes can affect functionality.
 
 ## Feedback and credits

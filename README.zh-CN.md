@@ -8,11 +8,21 @@
 
 糯米播放器把手机音乐 App 的歌曲信息和播放控制同步到 Android Auto，让你继续使用熟悉的播放器和歌单，在车机查看歌名、歌手、封面、进度，以及支持来源的实时歌词。音乐仍由原来的音乐 App 播放。
 
-> **糯米播放器 3.0 已发布！** [点击下载 3.0 安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [查看更新说明](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.0)。需要 **Android 13 或以上版本**，并搭配支持 Android Auto 的使用环境。
+> **糯米播放器 3.1 已发布！** [点击下载 3.1 安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.1/nuomi-player-3.1-release.apk) · [查看更新说明](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.1)。需要 **Android 13 或以上版本**，并搭配支持 Android Auto 的使用环境。
 
-[下载糯米播放器 3.0](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [版本与下载](#版本与下载) · [使用指南](#使用指南) · [问题反馈](https://github.com/charlottejas/NuomiPlayer/issues)
+[下载糯米播放器 3.1](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.1/nuomi-player-3.1-release.apk) · [版本与下载](#版本与下载) · [使用指南](#使用指南) · [问题反馈](https://github.com/charlottejas/NuomiPlayer/issues)
 
-## 3.0 界面展示
+## 3.1 更新内容
+
+- **修复 QQ 音乐封面与歌词同步。** 解决《Golden》演职员署名缩短时，车机封面消失、已加载歌词被清空的问题。
+- **改进原唱与伴奏切换。** 解决 QQ 部分原唱与伴奏切换时，相同内容歌词被误拒绝、需要重选来源才能恢复的问题。
+- **新增手机端 GitHub 更新提醒。** 发现更高正式版本时，可前往发布页下载；不会静默安装，连接车机时不弹出更新提示。
+
+**安装变化：** 3.1 使用新包名 `com.nuomiplayer`，与旧版 `com.nuomi` 是两个应用，可以共存。它不会覆盖旧版，也不会自动继承设置或通知读取授权；请重新完成引导，并在 Android Auto 中启用新安装的糯米。同包名、不同签名的开发测试包也无法直接覆盖安装。
+
+## 界面与功能展示
+
+以下截图拍摄于 3.0，展示已有的播放、歌词模式、设置与教程界面，不包含 3.1 新增的更新提醒。
 
 <table>
   <tr>
@@ -38,7 +48,7 @@
 
 ## 音乐 App 支持范围
 
-糯米通过 Android 系统媒体会话读取歌曲信息、转发控制，可接入多数提供这些能力的音乐 App。**通用播放支持不等于通用歌词支持。** 下表描述 3.0 的支持范围。
+糯米通过 Android 系统媒体会话读取歌曲信息、转发控制，可接入多数提供这些能力的音乐 App。**通用播放支持不等于通用歌词支持。** 下表描述 3.x 的功能支持范围。
 
 | 音乐来源 | 歌曲信息与基本播放控制 | 实时歌词 | 随机 / 循环模式切换 |
 | --- | --- | --- | --- |
@@ -53,10 +63,10 @@
 
 ## 使用指南
 
-在 Android 13 或以上版本的手机上安装 [3.0 安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk)，然后按以下步骤设置。
+在 Android 13 或以上版本的手机上安装 [3.1 安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.1/nuomi-player-3.1-release.apk)，然后按以下步骤设置。
 
 1. **配置 Android Auto。** 开启开发者模式，在开发者设置中勾选「未知来源」。如自定义启动器中出现糯米播放器，请勾选后重新连接车机。可参考 [Android 官方测试文档](https://developer.android.com/training/cars/testing)。
-2. **开启通知读取权限。** 糯米需要通过该权限连接音乐 App 的媒体会话。3.0 会说明权限用途，并提供系统设置入口；「启动通知」用于从车机发起打开音乐 App 的流程。
+2. **开启通知读取权限。** 糯米需要通过该权限连接音乐 App 的媒体会话。内置指南会说明权限用途，并提供系统设置入口；「启动通知」用于从车机发起打开音乐 App 的流程。
 3. **先在音乐 App 播放一首歌。** 然后返回糯米，点击「切换」并扫描，选择正在播放的音乐来源。
 4. **调整车机偏好。** 选择歌词显示模式、是否默认显示歌词，以及是否把当前来源加入「我的偏好」。
 5. **连接车机使用。** 打开 Android Auto 中的糯米播放器；遇到问题时，可回到手机端的「使用指南」或「连接帮助」。
@@ -70,16 +80,17 @@
 | 车机里找不到糯米 | 检查 Android Auto 的未知来源和自定义启动器设置，再重新连接。 |
 | 歌词不显示 | 检查来源与歌曲是否支持歌词、车机是否已开启歌词；联网歌词还受网络和上游服务影响。 |
 | 后台恢复失败 | 系统后台策略可能影响恢复；用户主动「强行停止」应用不属于普通后台回收，需要重新打开应用。 |
-| APK 安装受限 | 请参考手机品牌官方安装说明；熟悉 Android 开发的用户也可以通过仓库源码自行构建。 |
+| APK 安装受限 | 请参考手机品牌官方安装说明；当前安装包的完整对应源码尚未发布。 |
 
 ## 版本与下载
 
 | 版本 | 状态与下载 |
 | --- | --- |
-| **3.0** | **最新版本：**[下载安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · [更新说明](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.0) |
+| **3.1** | **最新版本：**[下载安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.1/nuomi-player-3.1-release.apk) · [更新说明](https://github.com/charlottejas/NuomiPlayer/releases/tag/v3.1) · 新包名 `com.nuomiplayer` |
+| 3.0 | 历史版本：[下载安装包](https://github.com/charlottejas/NuomiPlayer/releases/download/v3.0/nuomi-player-3.0-release.apk) · 包名 `com.nuomi` |
 | 2.0 | 历史版本：[下载糯米播放器 2.0](https://github.com/charlottejas/NuomiPlayer/raw/main/糯米播放器2.0.apk) |
 
-安装包通过 Release 附件提供；仓库源码尚未同步到此 3.0 构建，GitHub 自动生成的源码压缩包不是该安装包的对应源码。
+3.1 仅通过 Release 发布安装包、校验文件、构建清单和验收摘要。仓库源码尚未同步到该 APK 的构建状态；Release 标签与 GitHub 自动生成的源码压缩包均不代表此 APK 的完整对应源码。
 
 <details>
 <summary>历史版本与更新记录</summary>
@@ -106,7 +117,7 @@
 
 - 本项目用于个人学习与研究，不内置曲库，不提供音乐下载或会员解锁功能；实际音乐播放由原音乐 App 完成。
 - 歌曲信息与播放控制通过 Android 系统媒体会话等机制获取和转发，需要相应的通知读取权限。
-- 3.0 的 QQ 歌词来自播放器提供的媒体信息；网易云音乐和汽水音乐歌词按当前歌曲标识联网获取。
+- QQ 歌词来自播放器提供的媒体信息；网易云音乐和汽水音乐歌词按当前歌曲标识联网获取。
 - 歌词与封面等内容的相关权利属于各自权利人；上游 App 和服务的可用性、规则变化可能影响功能。
 
 ## 反馈与致谢
